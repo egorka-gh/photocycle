@@ -6,7 +6,7 @@ import (
 
 // FFService describes the fabrika-fotoknigi.ru service.
 type FFService interface {
-	GetGroups(ctx context.Context, status int, fromTS int64) ([]Group, error)
+	GetGroups(ctx context.Context, statuses []int, fromTS int64) ([]Group, error)
 }
 
 /*
