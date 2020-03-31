@@ -20,6 +20,19 @@ type Client struct {
 	httpClient *http.Client
 }
 
+//NewClient creates Service backed by an HTTP server living at the remote instance
+func NewClient(httpClient *http.Client, baseURL, appKey string) (FFService, error) {
+	u, err := url.Parse(baseURL)
+	if err != nil {
+		return nil, err
+	}
+	return &Client{
+		BaseURL:    u,
+		AppKey:     appKey,
+		httpClient: httpClient,
+	}, nil
+}
+
 //GetGroups implement Service
 func (c *Client) GetGroups(ctx context.Context, statuses []int, fromTS int64) ([]Group, error) {
 	//https://fabrika-fotoknigi.ru/api/?appkey=e5ea49c386479f7c30f60e52e8b9107b&action=fk:get_groups_by_status_and_period&debug=1&status=40&start=1574334313
@@ -34,7 +47,10 @@ func (c *Client) GetGroups(ctx context.Context, statuses []int, fromTS int64) ([
 	if err != nil {
 		return nil, err
 	}
-	r, err := c.do(rq, res)
+	r, err := c.do(rq, &res)
+	if err != nil {
+		return nil, err
+	}
 	if r.StatusCode != http.StatusOK {
 		return nil, statusError(r.StatusCode)
 	}

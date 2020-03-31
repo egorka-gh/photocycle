@@ -121,7 +121,8 @@ type FFService interface {
 
 //Group dto (orders group)
 type Group struct {
-	ID        int   `json:"Id"`
+	ID        int   `json:"id"`
+	Status    int   `json:"status.value"`
 	CreatedTS int64 `json:"tstamp"`
 	Boxes     []Box `json:"boxes"`
 }
