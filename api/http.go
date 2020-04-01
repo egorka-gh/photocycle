@@ -1,6 +1,7 @@
 package api
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -96,6 +97,23 @@ func (c *Client) do(req *http.Request, v interface{}) (*http.Response, error) {
 		return nil, err
 	}
 	defer resp.Body.Close()
-	err = json.NewDecoder(resp.Body).Decode(v)
+	var raw bytes.Buffer
+	tee := io.TeeReader(resp.Body, &raw)
+	err = json.NewDecoder(tee).Decode(v)
+	if err != nil {
+		ae := apiError{}
+		if e := json.NewDecoder(&raw).Decode(&ae); e == nil {
+			//intrenal api error
+			err = fmt.Errorf("Error: %s; Code: %d; Exception: %s", ae.Error, ae.Code, ae.Exception)
+		} else {
+			err = fmt.Errorf("%s; Response: %s", err.Error(), raw.String())
+		}
+	}
 	return resp, err
+}
+
+type apiError struct {
+	Code      int    `json:"code"`
+	Error     string `json:"error"`
+	Exception string `json:"exception"`
 }
