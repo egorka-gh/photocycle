@@ -40,7 +40,7 @@ func (c *Client) GetGroups(ctx context.Context, statuses []int, fromTS int64) ([
 	data.Set("action", "fk:get_groups_by_status_and_period")
 	data.Set("start", strconv.FormatInt(fromTS, 10))
 	for _, s := range statuses {
-		data.Add("status", strconv.Itoa(s))
+		data.Add("status[]", strconv.Itoa(s))
 	}
 	res := []Group{}
 	rq, err := c.newRequest(ctx, "POST", "", data)
@@ -74,6 +74,7 @@ func (c *Client) newRequest(ctx context.Context, method, path string, data url.V
 	} else {
 		u.RawQuery = data.Encode()
 	}
+	//fmt.Println(data.Encode())
 	req, err := http.NewRequestWithContext(ctx, method, u.String(), reader)
 	if err != nil {
 		return nil, err

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/egorka-gh/photocycle/api"
 )
@@ -14,12 +15,14 @@ func main() {
 		fmt.Println(err)
 		return
 	}
-	//t :=time.Now()
+	t := time.Now().Add(-time.Hour * 3)
+	fmt.Println(t)
 
-	g, err := client.GetGroups(context.Background(), []int{30}, int64(1574334313))
+	g, err := client.GetGroups(context.Background(), []int{30, 40}, t.Unix())
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 	fmt.Println(g)
+	fmt.Println(len(g))
 }
