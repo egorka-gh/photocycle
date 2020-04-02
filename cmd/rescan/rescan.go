@@ -74,10 +74,12 @@ func main() {
 		fmt.Println(err)
 		return
 	}
+	fmt.Printf("Получено %d групп", len(groups))
 	if len(groups) == 0 {
 		return
 	}
 	nps := make([]photocycle.GroupNetprint, 0, len(groups))
+	boxCount := 0
 	for _, group := range groups {
 		if !group.Npfactory {
 			continue
@@ -88,6 +90,7 @@ func main() {
 				continue
 			}
 			hasBoxes = true
+			boxCount++
 			nps = append(nps, photocycle.GroupNetprint{
 				BoxNumber:  box.BoxNumber,
 				GroupID:    group.ID,
@@ -107,6 +110,7 @@ func main() {
 			})
 		}
 	}
+	fmt.Printf("Коробок %d", boxCount)
 	err = rep.AddNetprints(context.Background(), nps)
 	if err != nil {
 		fmt.Println(err)

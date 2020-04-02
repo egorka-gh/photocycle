@@ -91,7 +91,6 @@ func (b *basicRepository) CreateOrder(ctx context.Context, o photocycle.Order) e
 	if b.readOnly {
 		return nil
 	}
-	//var ssql = "SELECT source, table_name, latest_version FROM cnv_version WHERE source = ? ORDER BY syncorder"
 	var sb strings.Builder
 	//INSERT IGNORE  ??
 	sb.WriteString("INSERT INTO orders (id, source, src_id, src_date, data_ts, state, state_date, group_id, ftp_folder, fotos_num, client_id, production)")
