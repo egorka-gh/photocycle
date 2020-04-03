@@ -2,6 +2,7 @@ package netprint
 
 import (
 	"context"
+	"sync"
 	"time"
 
 	"github.com/egorka-gh/photocycle"
@@ -30,8 +31,41 @@ type Manager struct {
 	logger log.Logger
 }
 
-//Sync fetch and save new boxes
-//boxes filled with 10-20 min gap (after group get 30 state), so sync uses some offset in hours
+//Run calls sync periodicaly, blocks caller till get quit
+func (m *Manager) Run(interval int, quit chan interface{}) {
+	var timer *time.Timer
+	mainCtx, mainCancel := context.WithCancel(context.Background())
+	defer mainCancel()
+	start := make(chan int, 1)
+	var wg sync.WaitGroup
+	loop := true
+
+	start <- 1
+	for loop {
+		select {
+		case <-start:
+			ctx, cancel := context.WithCancel(mainCtx)
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				defer cancel()
+				m.Sync(ctx)
+				timer = time.AfterFunc(time.Minute*time.Duration(interval), func() { start <- 1 })
+			}()
+		case <-quit:
+			if timer != nil {
+				timer.Stop()
+			}
+			mainCancel()
+			loop = false
+			wg.Wait()
+		}
+	}
+	close(start)
+}
+
+//Sync fetch and save new boxes.
+//boxes are filled with 10-20 min gap (after group get 30 state), so sync uses some offset in hours
 func (m *Manager) Sync(ctx context.Context) {
 	if ctx == nil {
 		ctx = context.Background()
