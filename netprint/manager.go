@@ -37,6 +37,7 @@ func (m *Manager) Run(interval int, quit chan interface{}) {
 	mainCtx, mainCancel := context.WithCancel(context.Background())
 	defer mainCancel()
 	start := make(chan int, 1)
+	defer close(start)
 	var wg sync.WaitGroup
 	loop := true
 
@@ -61,7 +62,7 @@ func (m *Manager) Run(interval int, quit chan interface{}) {
 			wg.Wait()
 		}
 	}
-	close(start)
+
 }
 
 //Sync fetch and save new boxes.

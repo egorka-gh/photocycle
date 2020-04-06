@@ -6,10 +6,9 @@ import (
 	"net/http"
 	"os"
 	"strconv"
-	"time"
 
-	"github.com/egorka-gh/photocycle"
 	"github.com/egorka-gh/photocycle/api"
+	"github.com/egorka-gh/photocycle/netprint"
 	"github.com/egorka-gh/photocycle/repo"
 	log "github.com/go-kit/kit/log"
 	_ "github.com/go-sql-driver/mysql"
@@ -59,63 +58,18 @@ func main() {
 		fmt.Printf("Ошибка подключения к базе данных %s\n", err.Error())
 		return
 	}
+	defer rep.Close()
 
 	//logger := initLoger(viper.GetString("folders.log"))
+	logger := initLoger("")
 
 	client, err := api.NewClient(http.DefaultClient, viper.GetString("source.url"), viper.GetString("source.appKey"))
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	t := time.Now().Add(-time.Hour * time.Duration(offset))
-
-	groups, err := client.GetGroups(context.Background(), []int{30, 40}, t.Unix())
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	fmt.Printf("Получено %d групп", len(groups))
-	if len(groups) == 0 {
-		return
-	}
-	nps := make([]photocycle.GroupNetprint, 0, len(groups))
-	boxCount := 0
-	for _, group := range groups {
-		if !group.Npfactory {
-			continue
-		}
-		hasBoxes := false
-		for _, box := range group.Boxes {
-			if box.OrderNumber == "" {
-				continue
-			}
-			hasBoxes = true
-			boxCount++
-			nps = append(nps, photocycle.GroupNetprint{
-				BoxNumber:  box.BoxNumber,
-				GroupID:    group.ID,
-				NetprintID: box.OrderNumber,
-				Source:     sourceID,
-				State:      group.Status.Value,
-			})
-		}
-		if !hasBoxes {
-			//not filled group
-			nps = append(nps, photocycle.GroupNetprint{
-				BoxNumber:  0,
-				GroupID:    group.ID,
-				NetprintID: "notprocessed",
-				Source:     sourceID,
-				State:      0,
-			})
-		}
-	}
-	fmt.Printf("Коробок %d", boxCount)
-	err = rep.AddNetprints(context.Background(), nps)
-	if err != nil {
-		fmt.Println(err)
-	}
-	rep.Close()
+	m := netprint.New(sourceID, offset, client, rep, logger)
+	m.Sync(context.Background())
 }
 
 func readConfig() error {
