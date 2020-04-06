@@ -1,0 +1,10 @@
+{
+    "source.id": 23,
+    "source.url": "https://fabrika-fotoknigi.ru/api/",
+    "source.appKey": "e5ea49c386479f7c30f60e52e8b9107b",
+    "mysql": "root:3411@tcp(127.0.0.1:3306)/fotocycle_cycle?parseTime=true",
+    "sync.interval": 30,
+    "sync.offset": 3,
+    "folders.log": ".\\log"
+
+}

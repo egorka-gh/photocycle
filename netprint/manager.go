@@ -12,6 +12,9 @@ import (
 
 //New creates new sync manager
 func New(source, offset int, client api.FFService, repo photocycle.Repository, logger log.Logger) *Manager {
+	if offset < 0 {
+		offset = 1
+	}
 	return &Manager{
 		source: source,
 		offset: offset,
@@ -32,8 +35,12 @@ type Manager struct {
 }
 
 //Run calls sync periodicaly, blocks caller till get quit
-func (m *Manager) Run(interval int, quit chan interface{}) {
+func (m *Manager) Run(interval int, quit chan struct{}) {
 	var timer *time.Timer
+	min := 10
+	if interval < min {
+		interval = min
+	}
 	mainCtx, mainCancel := context.WithCancel(context.Background())
 	defer mainCancel()
 	start := make(chan int, 1)
