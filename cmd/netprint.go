@@ -192,7 +192,7 @@ func initLoger(logPath string) log.Logger {
 		if !os.IsPathSeparator(path[len(path)-1]) {
 			path = path + string(os.PathSeparator)
 		}
-		path = path + "order.log"
+		path = path + "netprint.log"
 		logger = log.NewLogfmtLogger(&lumberjack.Logger{
 			Filename:   path,
 			MaxSize:    5, // megabytes
