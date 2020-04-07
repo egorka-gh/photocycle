@@ -5,6 +5,7 @@ import (
 	clog "log"
 	"net/http"
 	"os"
+	"path"
 	"time"
 
 	"github.com/egorka-gh/photocycle"
@@ -154,7 +155,7 @@ func initNetprint() (*netprint.Manager, photocycle.Repository, error) {
 	logger := initLoger(viper.GetString("folders.log"))
 	// use custom http client
 	c := &http.Client{
-		Timeout: time.Second * 20,
+		Timeout: time.Second * 30,
 	}
 	client, err := api.NewClient(c, viper.GetString("source.url"), viper.GetString("source.appKey"))
 	if err != nil {
@@ -174,11 +175,11 @@ func readConfig() error {
 	viper.SetDefault("sync.interval", 20)                                                     //sunc interval in mimutes
 	viper.SetDefault("sync.offset", 3)                                                        //sunc offset in hours
 
-	path, err := osext.ExecutableFolder()
+	folder, err := osext.ExecutableFolder()
 	if err != nil {
-		path = "."
+		folder = "."
 	}
-	viper.AddConfigPath(path)
+	viper.AddConfigPath(folder)
 	viper.SetConfigName("config")
 	return viper.ReadInConfig()
 }
@@ -188,13 +189,9 @@ func initLoger(logPath string) log.Logger {
 	if logPath == "" {
 		logger = log.NewLogfmtLogger(os.Stderr)
 	} else {
-		path := logPath
-		if !os.IsPathSeparator(path[len(path)-1]) {
-			path = path + string(os.PathSeparator)
-		}
-		path = path + "netprint.log"
+		logPath = path.Join(logPath, "netprint.log")
 		logger = log.NewLogfmtLogger(&lumberjack.Logger{
-			Filename:   path,
+			Filename:   logPath,
 			MaxSize:    5, // megabytes
 			MaxBackups: 5,
 			MaxAge:     60, //days
