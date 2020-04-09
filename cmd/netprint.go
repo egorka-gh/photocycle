@@ -155,7 +155,7 @@ func initNetprint() (*netprint.Manager, photocycle.Repository, error) {
 	logger := initLoger(viper.GetString("folders.log"))
 	// use custom http client
 	c := &http.Client{
-		Timeout: time.Second * 30,
+		Timeout: time.Second * 40,
 	}
 	client, err := api.NewClient(c, viper.GetString("source.url"), viper.GetString("source.appKey"))
 	if err != nil {
