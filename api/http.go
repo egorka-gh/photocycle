@@ -34,8 +34,8 @@ func NewClient(httpClient *http.Client, baseURL, appKey string) (FFService, erro
 	}, nil
 }
 
-//GetGroups implement Service
-func (c *Client) GetGroups(ctx context.Context, statuses []int, fromTS int64) ([]Group, error) {
+//GetNPGroups implement Service
+func (c *Client) GetNPGroups(ctx context.Context, statuses []int, fromTS int64) ([]NPGroup, error) {
 	//https://fabrika-fotoknigi.ru/api/?appkey=e5ea49c386479f7c30f60e52e8b9107b&action=fk:get_groups_by_status_and_period&debug=1&status=40&start=1574334313
 	data := url.Values{}
 	data.Set("action", "fk:get_groups_by_status_and_period")
@@ -43,7 +43,7 @@ func (c *Client) GetGroups(ctx context.Context, statuses []int, fromTS int64) ([
 	for _, s := range statuses {
 		data.Add("status[]", strconv.Itoa(s))
 	}
-	res := []Group{}
+	res := []NPGroup{}
 	rq, err := c.newRequest(ctx, "POST", "", data)
 	if err != nil {
 		return nil, err

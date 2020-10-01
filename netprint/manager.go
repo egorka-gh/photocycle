@@ -93,7 +93,7 @@ func (m *Manager) Sync(ctx context.Context) {
 	//current sync timestamp
 	syncts := time.Now().Unix()
 	//fetch
-	groups, err := m.client.GetGroups(ctx, []int{30, 40}, t.Unix())
+	groups, err := m.client.GetNPGroups(ctx, []int{30, 40}, t.Unix())
 	if err != nil {
 		m.logger.Log("Error", err.Error())
 		return

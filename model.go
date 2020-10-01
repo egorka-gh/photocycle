@@ -141,3 +141,35 @@ type PrintGroupFile struct {
 	Caption      string `json:"caption" db:"caption"`
 	BookPart     int    `json:"book_part" db:"book_part"`
 }
+
+//Package represents the mail package (order group)
+type Package struct {
+	ID       int `json:"id" db:"id"`
+	Source   int `json:"source" db:"source"`
+	ClientID int `json:"client_id" db:"client_id"`
+	Boxes    []PackageBox
+}
+
+//PackageBox represents the package mail box
+type PackageBox struct {
+	Source    int       `json:"source" db:"source"`
+	PackageID int       `json:"package_id" db:"package_id"`
+	ID        string    `json:"box_id" db:"box_id"`
+	Num       int       `json:"box_num" db:"box_num"`
+	Barcode   string    `json:"barcode" db:"barcode"`
+	Price     float64   `json:"price" db:"price"`
+	Weight    int       `json:"weight" db:"weight"`
+	State     int       `json:"state" db:"state"`
+	StateDate time.Time `json:"state_date" db:"state_date"`
+	Items     []PackageBoxItem
+}
+
+//PackageBoxItem represents the package mail box item (order or part of order )
+type PackageBoxItem struct {
+	BoxID   string `json:"box_id" db:"box_id"`
+	OrderID string `json:"order_id" db:"order_id"`
+	Alias   string `json:"alias" db:"alias"`
+	Type    string `json:"type" db:"type"`
+	From    int    `json:"item_from" db:"item_from"`
+	To      int    `json:"item_to" db:"item_to"`
+}

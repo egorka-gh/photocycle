@@ -6,20 +6,20 @@ import (
 
 // FFService describes the fabrika-fotoknigi.ru service.
 type FFService interface {
-	GetGroups(ctx context.Context, statuses []int, fromTS int64) ([]Group, error)
+	GetNPGroups(ctx context.Context, statuses []int, fromTS int64) ([]NPGroup, error)
 }
 
-//Group dto (orders group)
-type Group struct {
-	ID        int    `json:"id"`
-	Status    Status `json:"status"`
-	CreatedTS int64  `json:"tstamp"`
-	Boxes     []Box  `json:"boxes"`
-	Npfactory bool   `json:"npfactory"`
+//NPGroup netprint group dto (orders group)
+type NPGroup struct {
+	ID        int     `json:"id"`
+	Status    Status  `json:"status"`
+	CreatedTS int64   `json:"tstamp"`
+	Boxes     []NPBox `json:"boxes"`
+	Npfactory bool    `json:"npfactory"`
 }
 
-//Box dto (group post box)
-type Box struct {
+//NPBox dto (netprint maip box)
+type NPBox struct {
 	BoxNumber   int    `json:"number"`
 	OrderNumber string `json:"orderNumber"`
 }
