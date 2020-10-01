@@ -1,0 +1,109 @@
+{
+    "orderGroupId": 43314,
+    "price": 62.77,
+    "delivery_price": 3,
+    "payment_price": 0,
+    "total": 65.77,
+    "boxes": [{
+        "boxId": 17556,
+        "boxNumber": 1,
+        "barcode": "",
+        "boxPrice": 62.77,
+        "boxDeliveryPrice": 0,
+        "boxTotalPrice": 62.77,
+        "weight": 6234,
+        "items": 29,
+        "orders": [{
+                "orderId": 155937,
+                "alias": "21x30_trumo_melovannaja-laminat",
+                "type": "book",
+                "order_items_from": 1,
+                "order_items_to": 17
+            },
+            {
+                "orderId": 155964,
+                "alias": "13x18_gljancevaja",
+                "type": "photo",
+                "order_items_from": 1,
+                "order_items_to": 4
+            },
+            {
+                "orderId": 155965,
+                "alias": "15x21_gljancevaja",
+                "type": "photo",
+                "order_items_from": 1,
+                "order_items_to": 4
+            },
+            {
+                "orderId": 155966,
+                "alias": "20x30_gljancevaja",
+                "type": "photo",
+                "order_items_from": 1,
+                "order_items_to": 1
+            },
+            {
+                "orderId": 155967,
+                "alias": "10x15_gljancevaja",
+                "type": "photo",
+                "order_items_from": 1,
+                "order_items_to": 7
+            },
+            {
+                "orderId": 155968,
+                "alias": "10x15_gljancevaja",
+                "type": "photo",
+                "order_items_from": 1,
+                "order_items_to": 6
+            },
+            {
+                "orderId": 155969,
+                "alias": "10x15_gljancevaja",
+                "type": "photo",
+                "order_items_from": 1,
+                "order_items_to": 10
+            },
+            {
+                "orderId": 155970,
+                "alias": "10x15_gljancevaja",
+                "type": "photo",
+                "order_items_from": 1,
+                "order_items_to": 13
+            },
+            {
+                "orderId": 155971,
+                "alias": "10x15_gljancevaja",
+                "type": "photo",
+                "order_items_from": 1,
+                "order_items_to": 4
+            },
+            {
+                "orderId": 155972,
+                "alias": "10x15_gljancevaja",
+                "type": "photo",
+                "order_items_from": 1,
+                "order_items_to": 10
+            },
+            {
+                "orderId": 155973,
+                "alias": "10x15_gljancevaja",
+                "type": "photo",
+                "order_items_from": 1,
+                "order_items_to": 5
+            },
+            {
+                "orderId": 155975,
+                "alias": "10x15_gljancevaja",
+                "type": "photo",
+                "order_items_from": 1,
+                "order_items_to": 6
+            },
+            {
+                "orderId": 155976,
+                "alias": "10x15_gljancevaja",
+                "type": "photo",
+                "order_items_from": 1,
+                "order_items_to": 6
+            }
+        ]
+    }]
+}

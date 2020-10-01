@@ -7,10 +7,12 @@ import (
 
 // Repository describes the persistence on model
 type Repository interface {
+	//4 netprint boxes
 	GetLastNetprintSync(ctx context.Context, source int) (int64, error)
 	SetLastNetprintSync(ctx context.Context, source int, tstamp int64) error
 	AddNetprints(ctx context.Context, netprints []GroupNetprint) error
 
+	//common
 	//ListSource(ctx context.Context, source string) ([]Source, error)
 	CreateOrder(ctx context.Context, o Order) error
 	LoadOrder(ctx context.Context, id string) (Order, error)
