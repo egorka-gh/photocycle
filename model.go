@@ -3,8 +3,6 @@ package photocycle
 import (
 	"context"
 	"time"
-
-	"github.com/egorka-gh/photocycle"
 )
 
 // Repository describes the persistence on model
@@ -17,7 +15,7 @@ type Repository interface {
 	//common
 	//ListSource(ctx context.Context, source string) ([]Source, error)
 	GetSourceUrls(ctx context.Context) ([]SourceURL, error)
-	GetNewPackages(ctx context.Context) ([]photocycle.Package, error)
+	GetNewPackages(ctx context.Context) ([]Package, error)
 
 	CreateOrder(ctx context.Context, o Order) error
 	LoadOrder(ctx context.Context, id string) (Order, error)

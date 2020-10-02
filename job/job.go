@@ -3,6 +3,8 @@ package job
 import (
 	"context"
 	"errors"
+	"fmt"
+	"net/http"
 	"sync"
 	"time"
 
@@ -20,7 +22,6 @@ type Job interface {
 type baseJob struct {
 	name     string
 	repo     photocycle.Repository
-	client   api.FFService
 	logger   log.Logger
 	initFunc func(j *baseJob) error
 	doFunc   func(ctx context.Context, j *baseJob) error
@@ -114,10 +115,9 @@ func (r *Runer) Run(quit chan struct{}) error {
 	return nil
 }
 
-
 func fillBoxes(ctx context.Context, j *baseJob) error {
-	//create surce urls map
-	var urls = make(map[int]photocycle.SourceURL)
+	//create api clients map
+	var clients = make(map[int]api.FFService)
 	su, err := j.repo.GetSourceUrls(ctx)
 	if err != nil {
 		return err
@@ -126,7 +126,15 @@ func fillBoxes(ctx context.Context, j *baseJob) error {
 		return nil
 	}
 	for _, u := range su {
-		urls[u.ID] = u
+		c := &http.Client{
+			Timeout: time.Second * 40,
+		}
+		cl, err := api.NewClient(c, u.URL, u.AppKey)
+		if err != nil {
+			return err
+		}
+
+		clients[u.ID] = cl
 	}
 	//fetch not processed groups
 	grps, err := j.repo.GetNewPackages(ctx)
@@ -137,9 +145,15 @@ func fillBoxes(ctx context.Context, j *baseJob) error {
 		return nil
 	}
 	//get boxes
-	for i range grps{
-		
-	} 
+	for i := range grps {
+		cl, ok := clients[grps[i].Source]
+		if !ok {
+			return fmt.Errorf("Source %d not found", grps[i].Source)
+		}
+		//TODO
+		cl.GetBoxes(ctx, grps[i].ID)
+
+	}
 	//persist
 	//del processed
 
