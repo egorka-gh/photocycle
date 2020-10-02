@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/egorka-gh/photocycle"
+	"github.com/egorka-gh/photocycle/api"
 	log "github.com/go-kit/kit/log"
 )
 
@@ -19,9 +20,10 @@ type Job interface {
 type baseJob struct {
 	name     string
 	repo     photocycle.Repository
+	client   api.FFService
 	logger   log.Logger
 	initFunc func(j *baseJob) error
-	doFunc   func(j *baseJob, ctx context.Context) error
+	doFunc   func(ctx context.Context, j *baseJob) error
 }
 
 func (j *baseJob) Init() error {
@@ -37,7 +39,7 @@ func (j *baseJob) Init() error {
 
 func (j *baseJob) Do(ctx context.Context) {
 	if j.doFunc != nil {
-		err := j.doFunc(j, ctx)
+		err := j.doFunc(ctx, j)
 		if err != nil {
 			j.logger.Log("Error", err)
 		}
@@ -108,6 +110,38 @@ func (r *Runer) Run(quit chan struct{}) error {
 			wg.Wait()
 		}
 	}
+
+	return nil
+}
+
+
+func fillBoxes(ctx context.Context, j *baseJob) error {
+	//create surce urls map
+	var urls = make(map[int]photocycle.SourceURL)
+	su, err := j.repo.GetSourceUrls(ctx)
+	if err != nil {
+		return err
+	}
+	if len(su) == 0 {
+		return nil
+	}
+	for _, u := range su {
+		urls[u.ID] = u
+	}
+	//fetch not processed groups
+	grps, err := j.repo.GetNewPackages(ctx)
+	if err != nil {
+		return err
+	}
+	if len(grps) == 0 {
+		return nil
+	}
+	//get boxes
+	for i range grps{
+		
+	} 
+	//persist
+	//del processed
 
 	return nil
 }

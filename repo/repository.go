@@ -45,6 +45,14 @@ func (b *basicRepository) GetSourceUrls(ctx context.Context) ([]photocycle.Sourc
 	return res, err
 }
 
+func (b *basicRepository) GetNewPackages(ctx context.Context) ([]photocycle.Package, error) {
+	//TODO implement
+	var sql string = "SELECT 1"
+	res := []photocycle.Package{}
+	err := b.db.GetContext(ctx, &res, sql)
+	return res, err
+}
+
 func (b *basicRepository) GetLastNetprintSync(ctx context.Context, source int) (int64, error) {
 	var sql string = "SELECT ss.np_sync_tstamp FROM sources_sync ss WHERE ss.id = ?"
 	var res int64
