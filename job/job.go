@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/egorka-gh/photocycle"
 	log "github.com/go-kit/kit/log"
 )
 
@@ -13,6 +14,36 @@ import (
 type Job interface {
 	Init() error
 	Do(ctx context.Context)
+}
+
+type baseJob struct {
+	name     string
+	repo     photocycle.Repository
+	logger   log.Logger
+	initFunc func(j *baseJob) error
+	doFunc   func(j *baseJob, ctx context.Context) error
+}
+
+func (j *baseJob) Init() error {
+	if j.logger == nil {
+		j.logger = log.NewNopLogger()
+	}
+	j.logger = log.With(j.logger, "actor", "job-"+j.name)
+	if j.initFunc != nil {
+		return j.initFunc(j)
+	}
+	return nil
+}
+
+func (j *baseJob) Do(ctx context.Context) {
+	if j.doFunc != nil {
+		err := j.doFunc(j, ctx)
+		if err != nil {
+			j.logger.Log("Error", err)
+		}
+		return
+	}
+	return
 }
 
 //Runer job runer

@@ -8,7 +8,7 @@ import (
 
 func TestGroupBoxes(t *testing.T) {
 	//http://fotokniga.by/api/?appkey=91b06dc1105454167c8aad18a96c4572&action=fk:get_group_boxes&id=43314
-	client, err := NewClient(http.DefaultClient, "http://fotokniga.by/api", "91b06dc1105454167c8aad18a96c4572")
+	client, err := NewClient(http.DefaultClient, "http://fotokniga.by/", "91b06dc1105454167c8aad18a96c4572")
 	if err != nil {
 		t.Errorf("Error create client %q", err.Error())
 		return
@@ -20,7 +20,7 @@ func TestGroupBoxes(t *testing.T) {
 	}
 	fmt.Printf("Boxes:  %v\n", b)
 	//wrong url
-	client, err = NewClient(http.DefaultClient, "http://fotoknigGa.by/api", "91b06dc1105454167c8aad18a96c4572")
+	client, err = NewClient(http.DefaultClient, "http://fotoknigGa.by/", "91b06dc1105454167c8aad18a96c4572")
 	if err != nil {
 		t.Errorf("Error create client %q", err.Error())
 		return
@@ -32,7 +32,7 @@ func TestGroupBoxes(t *testing.T) {
 	}
 	fmt.Printf("Error:  %v\n", err)
 	//wrong url
-	client, err = NewClient(http.DefaultClient, "http://fotoknigGa.by/api", "91b06dc1105454167c8aad18a96c4572")
+	client, err = NewClient(http.DefaultClient, "http://fotoknigGa.by/", "91b06dc1105454167c8aad18a96c4572")
 	if err != nil {
 		t.Errorf("Error create client %q", err.Error())
 		return
@@ -44,7 +44,7 @@ func TestGroupBoxes(t *testing.T) {
 	}
 	fmt.Printf("Error:  %v\n", err)
 	//wrong key
-	client, err = NewClient(http.DefaultClient, "http://fotokniga.by/api", "wrong_app_key")
+	client, err = NewClient(http.DefaultClient, "http://fotokniga.by/", "wrong_app_key")
 	if err != nil {
 		t.Errorf("Error create client %q", err.Error())
 		return
@@ -56,7 +56,7 @@ func TestGroupBoxes(t *testing.T) {
 	}
 	fmt.Printf("Error:  %v\n", err)
 	//wrong id
-	client, err = NewClient(http.DefaultClient, "http://fotokniga.by/api", "91b06dc1105454167c8aad18a96c4572")
+	client, err = NewClient(http.DefaultClient, "http://fotokniga.by/", "91b06dc1105454167c8aad18a96c4572")
 	if err != nil {
 		t.Errorf("Error create client %q", err.Error())
 		return

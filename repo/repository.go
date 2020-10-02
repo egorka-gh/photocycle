@@ -38,6 +38,13 @@ func (b *basicRepository) Close() {
 	b.db.Close()
 }
 
+func (b *basicRepository) GetSourceUrls(ctx context.Context) ([]photocycle.SourceURL, error) {
+	var sql string = "SELECT s.id, s.type,  s1.url, s1.appkey FROM sources s INNER JOIN services s1 ON s.id = s1.src_id AND s1.srvc_id = 1 AND s1.url!='' WHERE s.online>0"
+	res := []photocycle.SourceURL{}
+	err := b.db.GetContext(ctx, &res, sql)
+	return res, err
+}
+
 func (b *basicRepository) GetLastNetprintSync(ctx context.Context, source int) (int64, error) {
 	var sql string = "SELECT ss.np_sync_tstamp FROM sources_sync ss WHERE ss.id = ?"
 	var res int64

@@ -169,7 +169,7 @@ func initNetprint() (*netprint.Manager, photocycle.Repository, error) {
 func readConfig() error {
 	viper.SetDefault("mysql", "root:3411@tcp(127.0.0.1:3306)/fotocycle_cycle?parseTime=true") //MySQL connection string
 	viper.SetDefault("source.id", 11)                                                         //photocycle source id
-	viper.SetDefault("source.url", "https://fabrika-fotoknigi.ru/api/")                       //photocycle source url
+	viper.SetDefault("source.url", "https://fabrika-fotoknigi.ru/")                           //photocycle source url
 	viper.SetDefault("source.appKey", "e5ea49c386479f7c30f60e52e8b9107b")                     //source site appkey
 	viper.SetDefault("folders.log", ".\\log")                                                 //Log folder
 	viper.SetDefault("sync.interval", 20)                                                     //sunc interval in mimutes

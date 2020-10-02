@@ -47,7 +47,7 @@ func (c *Client) GetNPGroups(ctx context.Context, statuses []int, fromTS int64) 
 		data.Add("status[]", strconv.Itoa(s))
 	}
 	res := []NPGroup{}
-	rq, err := c.newRequest(ctx, "POST", "", data)
+	rq, err := c.newRequest(ctx, "POST", "api/", data)
 	if err != nil {
 		return nil, err
 	}
@@ -72,7 +72,7 @@ func (c *Client) GetBoxes(ctx context.Context, groupID int) (*GroupBoxes, error)
 	data.Set("action", "fk:get_group_boxes")
 	data.Set("id", strconv.Itoa(groupID))
 	res := &GroupBoxes{}
-	rq, err := c.newRequest(ctx, "GET", "", data)
+	rq, err := c.newRequest(ctx, "POST", "api/", data)
 	if err != nil {
 		return nil, err
 	}
