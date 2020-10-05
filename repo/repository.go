@@ -46,11 +46,91 @@ func (b *basicRepository) GetSourceUrls(ctx context.Context) ([]photocycle.Sourc
 }
 
 func (b *basicRepository) GetNewPackages(ctx context.Context) ([]photocycle.Package, error) {
-	//TODO implement
-	var sql string = "SELECT 1"
+	var sql string = "SELECT source, id, client_id, created, attempt FROM package_new WHERE attempt < 3"
 	res := []photocycle.Package{}
 	err := b.db.GetContext(ctx, &res, sql)
 	return res, err
+}
+
+func (b *basicRepository) NewPackageUpdate(ctx context.Context, g photocycle.Package) error {
+	if b.readOnly {
+		return nil
+	}
+	sql := "UPDATE package_new SET attempt = ? WHERE source = ? AND id = ?"
+	_, err := b.db.ExecContext(ctx, sql, g.Attempt, g.Source, g.ID)
+	return err
+}
+
+func (b *basicRepository) PackageAddWithBoxes(ctx context.Context, packages []photocycle.Package) error {
+	if b.readOnly || len(packages) == 0 {
+		return nil
+	}
+	//insert packages
+	oSQL := "INSERT IGNORE INTO package (source, id, client_id, state, state_date) VALUES "
+	oVals := make([]string, 0, len(packages))
+	oArgs := []interface{}{}
+
+	xSQL := "INSERT INTO package_box (source, package_id, box_id, box_num, barcode, price, weight, state, state_date) VALUES "
+	xVals := make([]string, 0, len(packages)*5)
+	xArgs := []interface{}{}
+
+	pSQL := "INSERT INTO package_box_item (box_id, order_id, alias, item_from, item_to, type) VALUES "
+	pVals := make([]string, 0, len(packages)*5*3)
+	pArgs := []interface{}{}
+	for _, o := range packages {
+		//packages
+		oVals = append(oVals, "(?, ?, ?, 200, NOW())")
+		oArgs = append(oArgs, o.Source, o.ID, o.ClientID)
+		//boxes
+		for _, x := range o.Boxes {
+			xVals = append(xVals, "(?, ?, ?, ?, ?, ?, ?, 100, NOW())")
+			xArgs = append(xArgs, x.Source, x.PackageID, x.ID, x.Num, x.Barcode, x.Price, x.Weight)
+			//box items
+			for _, p := range x.Items {
+				pVals = append(pVals, "(box_id, order_id, alias, item_from, item_to, type)")
+				pArgs = append(pArgs, p.BoxID, p.OrderID, p.Alias, p.From, p.To, p.Type)
+			}
+		}
+	}
+	oSQL = oSQL + strings.Join(oVals, ",")
+	xSQL = xSQL + strings.Join(xVals, ",")
+	pSQL = pSQL + strings.Join(pVals, ",")
+	//run in transaction
+	t, err := b.db.BeginTxx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	_, err = t.Exec(oSQL, oArgs...)
+	if err != nil {
+		t.Rollback()
+		return err
+	}
+	if len(xVals) > 0 {
+		_, err = t.Exec(xSQL, xArgs...)
+		if err != nil {
+			t.Rollback()
+			return err
+		}
+	}
+	if len(pVals) > 0 {
+		_, err = t.Exec(pSQL, pArgs...)
+		if err != nil {
+			t.Rollback()
+			return err
+		}
+	}
+
+	//del from package_new
+	dSQL := "DELETE FROM package_new WHERE source =  ? AND id = ?"
+	for _, o := range packages {
+		_, err = t.Exec(dSQL, o.Source, o.ID)
+		if err != nil {
+			t.Rollback()
+			return err
+		}
+	}
+
+	return t.Commit()
 }
 
 func (b *basicRepository) GetLastNetprintSync(ctx context.Context, source int) (int64, error) {

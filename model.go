@@ -14,8 +14,11 @@ type Repository interface {
 
 	//common
 	//ListSource(ctx context.Context, source string) ([]Source, error)
+	//Package & boxes
 	GetSourceUrls(ctx context.Context) ([]SourceURL, error)
 	GetNewPackages(ctx context.Context) ([]Package, error)
+	NewPackageUpdate(ctx context.Context, g Package) error
+	PackageAddWithBoxes(ctx context.Context, packages []Package) error
 
 	CreateOrder(ctx context.Context, o Order) error
 	LoadOrder(ctx context.Context, id string) (Order, error)
@@ -149,9 +152,11 @@ type PrintGroupFile struct {
 
 //Package represents the mail package (order group)
 type Package struct {
-	ID       int `json:"id" db:"id"`
-	Source   int `json:"source" db:"source"`
-	ClientID int `json:"client_id" db:"client_id"`
+	ID       int       `json:"id" db:"id"`
+	Source   int       `json:"source" db:"source"`
+	ClientID int       `json:"client_id" db:"client_id"`
+	Created  time.Time `db:"created"`
+	Attempt  int       `db:"attempt"`
 	Boxes    []PackageBox
 }
 
