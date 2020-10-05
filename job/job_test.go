@@ -47,7 +47,7 @@ func TestGroupBoxes(t *testing.T) {
 			atomic.AddUint64(&cnt, 1)
 		},
 	}
-	r := Runer{
+	r := baseRuner{
 		interval: 1,
 		jobs:     []Job{j},
 	}
