@@ -92,6 +92,6 @@ func fillBoxes(ctx context.Context, j *baseJob) error {
 	if err != nil {
 		err = fmt.Errorf("repository.PackageAddWithBoxes error: %s", err.Error())
 	}
-	j.logger.Log("result", fmt.Sprintf("Groups found %d, added %d.", len(grps), len(filled)))
+	j.logger.Log("result", fmt.Sprintf("Groups found %d, added %d", len(grps), len(filled)))
 	return err
 }

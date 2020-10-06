@@ -90,9 +90,9 @@ func (r *baseRuner) Run(quit chan struct{}) error {
 		r.logger = log.NewNopLogger()
 	}
 	r.logger = log.With(r.logger, "actor", "runner")
-	r.logger.Log("event", "Starting.")
+	r.logger.Log("event", "Starting")
 	//init jobs
-	r.logger.Log("event", "Init jobs.")
+	r.logger.Log("event", "Init jobs")
 	for _, job := range r.jobs {
 		if j, ok := job.(*baseJob); ok {
 			j.repo = r.repo
@@ -117,7 +117,7 @@ func (r *baseRuner) Run(quit chan struct{}) error {
 		case <-start:
 			ctx, cancel := context.WithCancel(mainCtx)
 			wg.Add(1)
-			r.logger.Log("event", "Starting jobs.")
+			r.logger.Log("event", "Starting jobs")
 			go func() {
 				defer wg.Done()
 				defer cancel()
