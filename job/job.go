@@ -50,7 +50,7 @@ func (j *baseJob) Init() error {
 	if j.logger == nil {
 		j.logger = log.NewNopLogger()
 	}
-	j.logger = log.With(j.logger, "actor", "job-"+j.name)
+	j.logger = log.With(j.logger, "job", j.name)
 	if j.initFunc != nil {
 		return j.initFunc(j)
 	}
@@ -90,8 +90,9 @@ func (r *baseRuner) Run(quit chan struct{}) error {
 		r.logger = log.NewNopLogger()
 	}
 	r.logger = log.With(r.logger, "actor", "runner")
+	r.logger.Log("event", "Starting.")
 	//init jobs
-	r.logger.Log("event", "Starting.Init jobs.")
+	r.logger.Log("event", "Init jobs.")
 	for _, job := range r.jobs {
 		if j, ok := job.(*baseJob); ok {
 			j.repo = r.repo
@@ -136,6 +137,7 @@ func (r *baseRuner) Run(quit chan struct{}) error {
 			}
 			mainCancel()
 			loop = false
+			r.logger.Log("event", "Stop")
 			wg.Wait()
 		}
 	}

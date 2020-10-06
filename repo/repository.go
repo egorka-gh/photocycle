@@ -41,14 +41,14 @@ func (b *basicRepository) Close() {
 func (b *basicRepository) GetSourceUrls(ctx context.Context) ([]photocycle.SourceURL, error) {
 	var sql string = "SELECT s.id, s.type,  s1.url, s1.appkey FROM sources s INNER JOIN services s1 ON s.id = s1.src_id AND s1.srvc_id = 1 AND s1.url!='' WHERE s.online>0"
 	res := []photocycle.SourceURL{}
-	err := b.db.GetContext(ctx, &res, sql)
+	err := b.db.SelectContext(ctx, &res, sql)
 	return res, err
 }
 
 func (b *basicRepository) GetNewPackages(ctx context.Context) ([]photocycle.Package, error) {
 	var sql string = "SELECT source, id, client_id, created, attempt FROM package_new WHERE attempt < 3"
 	res := []photocycle.Package{}
-	err := b.db.GetContext(ctx, &res, sql)
+	err := b.db.SelectContext(ctx, &res, sql)
 	return res, err
 }
 
@@ -87,7 +87,7 @@ func (b *basicRepository) PackageAddWithBoxes(ctx context.Context, packages []ph
 			xArgs = append(xArgs, x.Source, x.PackageID, x.ID, x.Num, x.Barcode, x.Price, x.Weight)
 			//box items
 			for _, p := range x.Items {
-				pVals = append(pVals, "(box_id, order_id, alias, item_from, item_to, type)")
+				pVals = append(pVals, "(?, ?, ?, ?, ?, ?)")
 				pArgs = append(pArgs, p.BoxID, p.OrderID, p.Alias, p.From, p.To, p.Type)
 			}
 		}

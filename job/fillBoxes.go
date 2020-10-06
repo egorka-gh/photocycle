@@ -15,7 +15,7 @@ func fillBoxes(ctx context.Context, j *baseJob) error {
 	var clients = make(map[int]api.FFService)
 	su, err := j.repo.GetSourceUrls(ctx)
 	if err != nil {
-		return err
+		return fmt.Errorf("repository.GetSourceUrls error: %s", err.Error())
 	}
 	if len(su) == 0 {
 		return nil
@@ -34,7 +34,7 @@ func fillBoxes(ctx context.Context, j *baseJob) error {
 	//fetch not processed groups
 	grps, err := j.repo.GetNewPackages(ctx)
 	if err != nil {
-		return err
+		return fmt.Errorf("repository.GetNewPackages error: %s", err.Error())
 	}
 	if len(grps) == 0 {
 		return nil
@@ -50,6 +50,10 @@ func fillBoxes(ctx context.Context, j *baseJob) error {
 		gbs, err := cl.GetBoxes(ctx, g.ID)
 		if err != nil || len(gbs.Boxes) == 0 {
 			//boxes not filled or some error
+			if err != nil {
+				j.logger.Log("error", fmt.Sprintf("api.GetBoxes error: %s", err.Error()))
+
+			}
 			//increment err counter and skip
 			g.Attempt++
 			j.repo.NewPackageUpdate(ctx, g)
@@ -59,8 +63,9 @@ func fillBoxes(ctx context.Context, j *baseJob) error {
 		g.Boxes = make([]photocycle.PackageBox, 0, len(gbs.Boxes))
 		for _, ba := range gbs.Boxes {
 			bg := photocycle.PackageBox{
-				ID:        fmt.Sprintf("%d-%d", g.Source, ba.ID),
+				Source:    g.Source,
 				PackageID: g.ID,
+				ID:        fmt.Sprintf("%d-%d", g.Source, ba.ID),
 				Num:       ba.Number,
 				Barcode:   ba.Barcode,
 				Price:     ba.Price,
@@ -83,5 +88,10 @@ func fillBoxes(ctx context.Context, j *baseJob) error {
 		filled = append(filled, g)
 	}
 	//persist && del processed
-	return j.repo.PackageAddWithBoxes(ctx, filled)
+	err = j.repo.PackageAddWithBoxes(ctx, filled)
+	if err != nil {
+		err = fmt.Errorf("repository.PackageAddWithBoxes error: %s", err.Error())
+	}
+	j.logger.Log("result", fmt.Sprintf("Groups found %d, added %d.", len(grps), len(filled)))
+	return err
 }

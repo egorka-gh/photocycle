@@ -1,5 +1,5 @@
 {
-    "mysql": "root:3411@tcp(127.0.0.1:3306)/fotocycle_cycle?parseTime=true",
+    "mysql": "root:3411@tcp(127.0.0.1:3306)/fotocycle_202005?parseTime=true",
     "run.interval": 3,
     "folders.log": ".\\log"
 }

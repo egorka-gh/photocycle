@@ -131,7 +131,7 @@ func (p *program) Stop(s service1.Service) error {
 	close(p.interrupt)
 	//waite service stops
 	<-p.quit
-	dLogger.Info("Netprint stopped")
+	dLogger.Info("Cycle stopped")
 	return nil
 }
 
@@ -148,9 +148,9 @@ func initRuner() (job.Runer, photocycle.Repository, error) {
 }
 
 func readConfig() error {
-	viper.SetDefault("mysql", "root:3411@tcp(127.0.0.1:3306)/fotocycle_cycle?parseTime=true") //MySQL connection string
-	viper.SetDefault("folders.log", ".\\log")                                                 //Log folder
-	viper.SetDefault("run.interval", 3)                                                       //run interval in mimutes
+	viper.SetDefault("mysql", "root:3411@tcp(127.0.0.1:3306)/fotocycle_202005?parseTime=true") //MySQL connection string
+	viper.SetDefault("folders.log", ".\\log")                                                  //Log folder
+	viper.SetDefault("run.interval", 3)                                                        //run interval in mimutes
 
 	folder, err := osext.ExecutableFolder()
 	if err != nil {
