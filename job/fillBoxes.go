@@ -40,7 +40,7 @@ func fillBoxes(ctx context.Context, j *baseJob) error {
 		return nil
 	}
 	//get boxes
-	filled := make([]photocycle.Package, 0, len(grps))
+	filled := make([]photocycle.PackageNew, 0, len(grps))
 	for _, g := range grps {
 		cl, ok := clients[g.Source]
 		if !ok {

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -61,6 +62,43 @@ func (c *Client) GetNPGroups(ctx context.Context, statuses []int, fromTS int64) 
 	return res, err
 }
 
+//GetGroup implement Service
+func (c *Client) GetGroup(ctx context.Context, groupID int) (map[string]interface{}, error) {
+	//https://fabrika-fotoknigi.ru/apiclient.php?cmd=group&args[number]=349141
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	data := url.Values{}
+	data.Set("appkey", "sp0oULbDnJfk7AjBNtVG")
+	data.Set("cmd", "group")
+	data.Set("args[number]", strconv.Itoa(groupID))
+	rq, err := c.newRequest(ctx, "POST", "api.php/", data)
+	if err != nil {
+		return nil, err
+	}
+	var res interface{}
+	r, err := c.do(rq, &res)
+	if err != nil {
+		return nil, err
+	}
+	if r.StatusCode != http.StatusOK {
+		return nil, statusError(r.StatusCode)
+	}
+	raw, ok := res.(map[string]interface{})
+	if !ok {
+		return raw, errors.New("Empty or wrong responce")
+	}
+	res, ok = raw["result"]
+	if !ok {
+		return raw, errors.New("Empty or wrong responce")
+	}
+	raw, ok = res.(map[string]interface{})
+	if !ok {
+		return raw, errors.New("Empty or wrong responce")
+	}
+	return raw, err
+}
+
 //GetBoxes implement Service
 func (c *Client) GetBoxes(ctx context.Context, groupID int) (*GroupBoxes, error) {
 	if ctx == nil {
@@ -96,7 +134,9 @@ func (c *Client) newRequest(ctx context.Context, method, path string, data url.V
 	if data == nil {
 		data = url.Values{}
 	}
-	data.Set("appkey", c.AppKey)
+	if data.Get("appkey") == "" {
+		data.Set("appkey", c.AppKey)
+	}
 	var reader io.Reader
 	if method == "POST" {
 		reader = strings.NewReader(data.Encode())
@@ -104,6 +144,8 @@ func (c *Client) newRequest(ctx context.Context, method, path string, data url.V
 		//api bug with reserved char :
 		q := data.Encode()
 		q = strings.Replace(q, "%3A", ":", -1)
+		q = strings.Replace(q, "%5B", "[", -1)
+		q = strings.Replace(q, "%5D", "]", -1)
 		u.RawQuery = q //data.Encode()
 	}
 	//fmt.Println(data.Encode())
@@ -132,12 +174,15 @@ func (c *Client) do(req *http.Request, v interface{}) (*http.Response, error) {
 	tee := io.TeeReader(resp.Body, &raw)
 	err = json.NewDecoder(tee).Decode(v)
 	if err != nil {
+		errStr := raw.String()
+		err = fmt.Errorf("%s; Response: %s", err.Error(), errStr)
+
+		raw.Reset()
+		raw.WriteString(errStr)
 		ae := apiError{}
 		if e := json.NewDecoder(&raw).Decode(&ae); e == nil && (ae.Code != 0 || ae.Error != "") {
 			//intrenal api error
 			err = fmt.Errorf("Error: %s; Code: %d; Exception: %s", ae.Error, ae.Code, ae.Exception)
-		} else {
-			err = fmt.Errorf("%s; Response: %s", err.Error(), raw.String())
 		}
 	}
 	return resp, err

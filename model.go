@@ -16,9 +16,9 @@ type Repository interface {
 	//ListSource(ctx context.Context, source string) ([]Source, error)
 	//Package & boxes
 	GetSourceUrls(ctx context.Context) ([]SourceURL, error)
-	GetNewPackages(ctx context.Context) ([]Package, error)
-	NewPackageUpdate(ctx context.Context, g Package) error
-	PackageAddWithBoxes(ctx context.Context, packages []Package) error
+	GetNewPackages(ctx context.Context) ([]PackageNew, error)
+	NewPackageUpdate(ctx context.Context, g PackageNew) error
+	PackageAddWithBoxes(ctx context.Context, packages []PackageNew) error
 
 	CreateOrder(ctx context.Context, o Order) error
 	LoadOrder(ctx context.Context, id string) (Order, error)
@@ -36,6 +36,7 @@ type Repository interface {
 	StartOrders(ctx context.Context, source, group int, skipID string) error
 	CountCurrentOrders(ctx context.Context, source int) (int, error)
 	GetCurrentOrders(ctx context.Context, source int) ([]GroupState, error)
+	GetJSONMaps(ctx context.Context) (map[int][]JSONMap, error)
 	Close()
 }
 
@@ -150,14 +151,51 @@ type PrintGroupFile struct {
 	BookPart     int    `json:"book_part" db:"book_part"`
 }
 
-//Package represents the mail package (order group)
-type Package struct {
+//PackageNew represents the new mail package (package to create in cycle database)
+type PackageNew struct {
 	ID       int       `json:"id" db:"id"`
 	Source   int       `json:"source" db:"source"`
 	ClientID int       `json:"client_id" db:"client_id"`
 	Created  time.Time `db:"created"`
 	Attempt  int       `db:"attempt"`
 	Boxes    []PackageBox
+}
+
+//Package represents the  mail package (order group)
+type Package struct {
+	ID            int       `json:"id" db:"id"`
+	Source        int       `json:"source" db:"source"`
+	IDName        string    `json:"number" db:"id_name"`
+	ClientID      int       `json:"client_id" db:"client_id"`
+	State         int       `json:"state" db:"state"`
+	StateDate     time.Time `json:"state_date" db:"state_date"`
+	ExecutionDate time.Time `json:"execution_date" db:"execution_date"`
+	DeliveryID    int       `json:"delivery_id" db:"delivery_id"`
+	DeliveryName  string    `json:"delivery_name" db:"delivery_name"`
+	SrcState      int       `json:"src_state" db:"src_state"`
+	SrcStateName  string    `json:"src_state_name" db:"src_state_name"`
+	MailService   int       `json:"mail_service" db:"mail_service"`
+	OrdersNum     int       `json:"orders_num" db:"orders_num"`
+	Boxes         []PackageBox
+	Properties    []PackageProperty
+	Barcodes      []PackageBarcode
+}
+
+//PackageProperty represents the package property
+type PackageProperty struct {
+	Source    int    `json:"source" db:"source"`
+	PackageID int    `json:"id" db:"id"`
+	Property  string `json:"property" db:"property"`
+	Value     string `json:"value" db:"value"`
+}
+
+//PackageBarcode represents the package barcode
+type PackageBarcode struct {
+	Source      int    `json:"source" db:"source"`
+	PackageID   int    `json:"id" db:"id"`
+	Barcode     string `json:"barcode" db:"barcode"`
+	BarcodeType int    `json:"bar_type" db:"bar_type"`
+	BoxNumber   int    `json:"box_number" db:"box_number"`
 }
 
 //PackageBox represents the package mail box
@@ -192,4 +230,15 @@ type SourceURL struct {
 	URL    string `db:"url"`
 	Type   int    `db:"type"`
 	AppKey string `db:"appkey"`
+}
+
+//JSONMap dto to get url for api calls
+type JSONMap struct {
+	SrcType   int    `db:"src_type"`
+	Family    int    `db:"family"`
+	AttrType  int    `db:"attr_type"`
+	JSONKey   string `db:"json_key"`
+	Field     string `db:"field"`
+	FieldName string `db:"field_name"`
+	IsList    bool   `db:"list"`
 }

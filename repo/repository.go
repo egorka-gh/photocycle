@@ -45,14 +45,14 @@ func (b *basicRepository) GetSourceUrls(ctx context.Context) ([]photocycle.Sourc
 	return res, err
 }
 
-func (b *basicRepository) GetNewPackages(ctx context.Context) ([]photocycle.Package, error) {
+func (b *basicRepository) GetNewPackages(ctx context.Context) ([]photocycle.PackageNew, error) {
 	var sql string = "SELECT source, id, client_id, created, attempt FROM package_new WHERE attempt < 3"
-	res := []photocycle.Package{}
+	res := []photocycle.PackageNew{}
 	err := b.db.SelectContext(ctx, &res, sql)
 	return res, err
 }
 
-func (b *basicRepository) NewPackageUpdate(ctx context.Context, g photocycle.Package) error {
+func (b *basicRepository) NewPackageUpdate(ctx context.Context, g photocycle.PackageNew) error {
 	if b.readOnly {
 		return nil
 	}
@@ -61,7 +61,7 @@ func (b *basicRepository) NewPackageUpdate(ctx context.Context, g photocycle.Pac
 	return err
 }
 
-func (b *basicRepository) PackageAddWithBoxes(ctx context.Context, packages []photocycle.Package) error {
+func (b *basicRepository) PackageAddWithBoxes(ctx context.Context, packages []photocycle.PackageNew) error {
 	if b.readOnly || len(packages) == 0 {
 		return nil
 	}
@@ -394,4 +394,26 @@ func (b *basicRepository) GetCurrentOrders(ctx context.Context, source int) ([]p
 	sql := sb.String()
 	err := b.db.SelectContext(ctx, &res, sql, source)
 	return res, err
+}
+
+func (b *basicRepository) GetJSONMaps(ctx context.Context) (map[int][]photocycle.JSONMap, error) {
+	res := []photocycle.JSONMap{}
+	var sb strings.Builder
+	sb.WriteString("SELECT jm.*, at.attr_fml family, at.field, at.list, at.persist, at.name field_name")
+	sb.WriteString(" FROM attr_json_map jm")
+	sb.WriteString(" INNER JOIN attr_type at ON jm.attr_type=at.id")
+	sb.WriteString(" WHERE jm.src_type IN(0,4)")
+	sb.WriteString(" ORDER BY at.attr_fml, at.field")
+	sql := sb.String()
+	err := b.db.SelectContext(ctx, &res, sql)
+	resMap := make(map[int][]photocycle.JSONMap)
+	for _, m := range res {
+		v, ok := resMap[m.Family]
+		if !ok {
+			v = make([]photocycle.JSONMap, 0)
+		}
+		resMap[m.Family] = append(v, m)
+	}
+
+	return resMap, err
 }
