@@ -399,13 +399,16 @@ func (b *basicRepository) GetCurrentOrders(ctx context.Context, source int) ([]p
 func (b *basicRepository) GetJSONMaps(ctx context.Context) (map[int][]photocycle.JSONMap, error) {
 	res := []photocycle.JSONMap{}
 	var sb strings.Builder
-	sb.WriteString("SELECT jm.*, at.attr_fml family, at.field, at.list, at.persist, at.name field_name")
+	sb.WriteString("SELECT jm.*, at.attr_fml family, at.field, at.list, at.name field_name")
 	sb.WriteString(" FROM attr_json_map jm")
 	sb.WriteString(" INNER JOIN attr_type at ON jm.attr_type=at.id")
 	sb.WriteString(" WHERE jm.src_type IN(0,4)")
 	sb.WriteString(" ORDER BY at.attr_fml, at.field")
 	sql := sb.String()
 	err := b.db.SelectContext(ctx, &res, sql)
+	if err != nil {
+		return nil, err
+	}
 	resMap := make(map[int][]photocycle.JSONMap)
 	for _, m := range res {
 		v, ok := resMap[m.Family]
@@ -413,6 +416,25 @@ func (b *basicRepository) GetJSONMaps(ctx context.Context) (map[int][]photocycle
 			v = make([]photocycle.JSONMap, 0)
 		}
 		resMap[m.Family] = append(v, m)
+	}
+
+	return resMap, err
+}
+
+func (b *basicRepository) GetDeliveryMaps(ctx context.Context) (map[int]map[int]photocycle.DeliveryTypeMapping, error) {
+	res := []photocycle.DeliveryTypeMapping{}
+	sql := "SELECT dtd.*  FROM delivery_type_dictionary dtd WHERE dtd.delivery_type!=0 ORDER BY dtd.source, dtd.delivery_type"
+	err := b.db.SelectContext(ctx, &res, sql)
+	if err != nil {
+		return nil, err
+	}
+	resMap := make(map[int]map[int]photocycle.DeliveryTypeMapping)
+	for _, m := range res {
+		_, ok := resMap[m.Source]
+		if !ok {
+			resMap[m.Source] = make(map[int]photocycle.DeliveryTypeMapping)
+		}
+		resMap[m.Source][m.SiteID] = m
 	}
 
 	return resMap, err

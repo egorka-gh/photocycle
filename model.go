@@ -2,6 +2,7 @@ package photocycle
 
 import (
 	"context"
+	"encoding/json"
 	"time"
 )
 
@@ -37,6 +38,7 @@ type Repository interface {
 	CountCurrentOrders(ctx context.Context, source int) (int, error)
 	GetCurrentOrders(ctx context.Context, source int) ([]GroupState, error)
 	GetJSONMaps(ctx context.Context) (map[int][]JSONMap, error)
+	GetDeliveryMaps(ctx context.Context) (map[int]map[int]DeliveryTypeMapping, error)
 	Close()
 }
 
@@ -161,24 +163,33 @@ type PackageNew struct {
 	Boxes    []PackageBox
 }
 
+//DeliveryTypeMapping represents the delivery_type_dictionary
+type DeliveryTypeMapping struct {
+	Source       int  `json:"source" db:"source"`
+	DeliveryType int  `json:"delivery_type" db:"delivery_type"`
+	SiteID       int  `json:"site_id" db:"site_id"`
+	SetSend      bool `json:"set_send" db:"set_send"`
+}
+
 //Package represents the  mail package (order group)
 type Package struct {
-	ID            int       `json:"id" db:"id"`
-	Source        int       `json:"source" db:"source"`
-	IDName        string    `json:"number" db:"id_name"`
-	ClientID      int       `json:"client_id" db:"client_id"`
-	State         int       `json:"state" db:"state"`
-	StateDate     time.Time `json:"state_date" db:"state_date"`
-	ExecutionDate time.Time `json:"execution_date" db:"execution_date"`
-	DeliveryID    int       `json:"delivery_id" db:"delivery_id"`
-	DeliveryName  string    `json:"delivery_name" db:"delivery_name"`
-	SrcState      int       `json:"src_state" db:"src_state"`
-	SrcStateName  string    `json:"src_state_name" db:"src_state_name"`
-	MailService   int       `json:"mail_service" db:"mail_service"`
-	OrdersNum     int       `json:"orders_num" db:"orders_num"`
-	Boxes         []PackageBox
-	Properties    []PackageProperty
-	Barcodes      []PackageBarcode
+	ID               int       `json:"id" db:"id"`
+	Source           int       `json:"source" db:"source"`
+	IDName           string    `json:"number" db:"id_name"`
+	ClientID         int       `json:"client_id" db:"client_id"`
+	State            int       `json:"state" db:"state"`
+	StateDate        time.Time `json:"state_date" db:"state_date"`
+	ExecutionDate    Date      `json:"execution_date" db:"execution_date"`
+	NativeDeliveryID int       `json:"delivery_id"`
+	DeliveryID       int       `db:"delivery_id"`
+	DeliveryName     string    `json:"delivery_name" db:"delivery_name"`
+	SrcState         int       `json:"src_state" db:"src_state"`
+	SrcStateName     string    `json:"src_state_name" db:"src_state_name"`
+	MailService      int       `json:"mail_service" db:"mail_service"`
+	OrdersNum        int       `json:"orders_num" db:"orders_num"`
+	Boxes            []PackageBox
+	Properties       []PackageProperty
+	Barcodes         []PackageBarcode
 }
 
 //PackageProperty represents the package property
@@ -241,4 +252,39 @@ type JSONMap struct {
 	Field     string `db:"field"`
 	FieldName string `db:"field_name"`
 	IsList    bool   `db:"list"`
+}
+
+//Date is time.Time, used to Marshal/Unmarshal custom date format (dd.mm.yyyy)
+type Date time.Time
+
+//UnmarshalJSON  Unmarshal custom date format
+func (d *Date) UnmarshalJSON(b []byte) error {
+	if len(b) == 0 || string(b) == "null" {
+		return nil
+	}
+	//unmarshal to string??
+	var s string
+	json.Unmarshal(b, &s)
+	t, err := time.Parse("02.01.2006", s)
+	if err == nil {
+		*d = Date(t)
+	}
+	return err
+}
+
+//MarshalJSON  Marshal custom date format
+func (d *Date) MarshalJSON() ([]byte, error) {
+	s := d.format("02.01.2006")
+	j, err := json.Marshal(s)
+	return j, err
+}
+
+func (d Date) format(s string) string {
+	t := time.Time(d)
+	return t.Format(s)
+}
+
+//String implementing Stringer interface
+func (d Date) String() string {
+	return d.format(time.RFC3339)
 }
