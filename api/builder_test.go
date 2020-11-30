@@ -1,10 +1,12 @@
 package api
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"testing"
 
+	"github.com/egorka-gh/photocycle"
 	"github.com/egorka-gh/photocycle/repo"
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -39,5 +41,7 @@ func TestBuildPackage(t *testing.T) {
 		return
 	}
 	fmt.Printf("Result:  %v\n", p)
+	ps := []*photocycle.Package{p}
+	rep.PackageAddWithBoxes(context.Background(), ps)
 
 }

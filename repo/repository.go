@@ -47,7 +47,8 @@ func (b *basicRepository) GetSourceUrls(ctx context.Context) ([]photocycle.Sourc
 }
 
 func (b *basicRepository) GetNewPackages(ctx context.Context) ([]photocycle.PackageNew, error) {
-	var sql string = "SELECT source, id, client_id, created, attempt FROM package_new WHERE attempt < 3"
+	//var sql string = "SELECT source, id, client_id, created, attempt FROM package_new WHERE attempt < 10"
+	var sql string = "SELECT source, id, client_id, created, attempt FROM package_new"
 	res := []photocycle.PackageNew{}
 	err := b.db.SelectContext(ctx, &res, sql)
 	return res, err
@@ -97,14 +98,15 @@ func (b *basicRepository) PackageAddWithBoxes(ctx context.Context, packages []*p
 		oArgs = append(oArgs, o.Source, o.ID, o.ClientID, o.IDName, o.ExecutionDate.String(), o.DeliveryID, o.DeliveryName, o.SrcState, o.SrcStateName, o.MailService)
 		//props
 		for _, prop := range o.Properties {
+			//source, id, property, value
 			propVals = append(propVals, "(?, ?, ?, ?)")
 			propArgs = append(propArgs, prop.Source, prop.PackageID, prop.Property, prop.Value)
 		}
 		//barcodes
 		for _, bar := range o.Barcodes {
 			//(source, id, barcode, bar_type, box_number)
-			barVals = append(propVals, "(?, ?, ?, ?, ?)")
-			barArgs = append(propArgs, bar.Source, bar.PackageID, bar.Barcode, bar.BarcodeType, bar.BoxNumber)
+			barVals = append(barVals, "(?, ?, ?, ?, ?)")
+			barArgs = append(barArgs, bar.Source, bar.PackageID, bar.Barcode, bar.BarcodeType, bar.BoxNumber)
 		}
 		//boxes
 		for _, x := range o.Boxes {

@@ -57,7 +57,7 @@ func fillBoxes(ctx context.Context, j *baseJob) error {
 		}
 		//loadfrom site
 		gbs, err := cl.GetBoxes(ctx, g.ID)
-		if err != nil || len(gbs.Boxes) == 0 {
+		if err != nil || gbs == nil || len(gbs.Boxes) == 0 {
 			//boxes not filled or some error
 			if err != nil {
 				j.logger.Log("error", fmt.Sprintf("api.GetBoxes error: %s", err.Error()))
@@ -89,31 +89,34 @@ func fillBoxes(ctx context.Context, j *baseJob) error {
 			continue
 		}
 
-		//fill and save
-		group.Boxes = make([]photocycle.PackageBox, 0, len(gbs.Boxes))
-		for _, ba := range gbs.Boxes {
-			bg := photocycle.PackageBox{
-				Source:    group.Source,
-				PackageID: group.ID,
-				ID:        fmt.Sprintf("%d-%d", group.Source, ba.ID),
-				Num:       ba.Number,
-				Barcode:   ba.Barcode,
-				Price:     ba.Price,
-				Weight:    ba.Weight,
-			}
-			bg.Items = make([]photocycle.PackageBoxItem, 0, len(ba.Items))
-			for _, bi := range ba.Items {
-				i := photocycle.PackageBoxItem{
-					BoxID:   bg.ID,
-					OrderID: fmt.Sprintf("%d-%d", group.Source, bi.OrderID),
-					Alias:   bi.Alias,
-					Type:    bi.Type,
-					From:    bi.From,
-					To:      bi.To,
+		//fill boxes
+		group.Boxes = make([]photocycle.PackageBox, 0)
+		// can be nil if site not suppert boxes
+		if gbs != nil {
+			for _, ba := range gbs.Boxes {
+				bg := photocycle.PackageBox{
+					Source:    group.Source,
+					PackageID: group.ID,
+					ID:        fmt.Sprintf("%d-%d", group.Source, ba.ID),
+					Num:       ba.Number,
+					Barcode:   ba.Barcode,
+					Price:     ba.Price,
+					Weight:    ba.Weight,
 				}
-				bg.Items = append(bg.Items, i)
+				bg.Items = make([]photocycle.PackageBoxItem, 0, len(ba.Items))
+				for _, bi := range ba.Items {
+					i := photocycle.PackageBoxItem{
+						BoxID:   bg.ID,
+						OrderID: fmt.Sprintf("%d-%d", group.Source, bi.OrderID),
+						Alias:   bi.Alias,
+						Type:    bi.Type,
+						From:    bi.From,
+						To:      bi.To,
+					}
+					bg.Items = append(bg.Items, i)
+				}
+				group.Boxes = append(group.Boxes, bg)
 			}
-			group.Boxes = append(group.Boxes, bg)
 		}
 		filled = append(filled, group)
 	}
@@ -121,7 +124,8 @@ func fillBoxes(ctx context.Context, j *baseJob) error {
 	err = j.repo.PackageAddWithBoxes(ctx, filled)
 	if err != nil {
 		err = fmt.Errorf("repository.PackageAddWithBoxes error: %s", err.Error())
+	} else {
+		j.logger.Log("result", fmt.Sprintf("Groups found %d, added %d", len(grps), len(filled)))
 	}
-	j.logger.Log("result", fmt.Sprintf("Groups found %d, added %d", len(grps), len(filled)))
 	return err
 }
