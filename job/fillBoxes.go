@@ -10,6 +10,15 @@ import (
 	"github.com/egorka-gh/photocycle/api"
 )
 
+func initFillBoxes(j *baseJob) error {
+	b, err := api.CreateBuilder(j.repo)
+	if err != nil {
+		return fmt.Errorf("initFillBoxes error: %s", err.Error())
+	}
+	j.builder = b
+	return nil
+}
+
 func fillBoxes(ctx context.Context, j *baseJob) error {
 	//create api clients map
 	var clients = make(map[int]api.FFService)
@@ -39,8 +48,8 @@ func fillBoxes(ctx context.Context, j *baseJob) error {
 	if len(grps) == 0 {
 		return nil
 	}
-	//get boxes
-	filled := make([]photocycle.PackageNew, 0, len(grps))
+	//get boxes first
+	filled := make([]*photocycle.Package, 0, len(grps))
 	for _, g := range grps {
 		cl, ok := clients[g.Source]
 		if !ok {
@@ -56,16 +65,37 @@ func fillBoxes(ctx context.Context, j *baseJob) error {
 			}
 			//increment err counter and skip
 			g.Attempt++
+			if g.Attempt < 3 {
+				//maybe it's not ready
+				//try next time
+				j.repo.NewPackageUpdate(ctx, g)
+				continue
+			}
+		}
+
+		//get group (raw)
+		raw, err := cl.GetGroup(ctx, g.ID)
+		if err != nil {
+			j.logger.Log("error", fmt.Sprintf("api.GetGroup error: %s", err.Error()))
+			g.Attempt++
 			j.repo.NewPackageUpdate(ctx, g)
 			continue
 		}
+		group, err := j.builder.BuildPackage(g.Source, raw)
+		if err != nil {
+			j.logger.Log("error", fmt.Sprintf("api.BuildPackage error: %s", err.Error()))
+			g.Attempt++
+			j.repo.NewPackageUpdate(ctx, g)
+			continue
+		}
+
 		//fill and save
-		g.Boxes = make([]photocycle.PackageBox, 0, len(gbs.Boxes))
+		group.Boxes = make([]photocycle.PackageBox, 0, len(gbs.Boxes))
 		for _, ba := range gbs.Boxes {
 			bg := photocycle.PackageBox{
-				Source:    g.Source,
-				PackageID: g.ID,
-				ID:        fmt.Sprintf("%d-%d", g.Source, ba.ID),
+				Source:    group.Source,
+				PackageID: group.ID,
+				ID:        fmt.Sprintf("%d-%d", group.Source, ba.ID),
 				Num:       ba.Number,
 				Barcode:   ba.Barcode,
 				Price:     ba.Price,
@@ -75,7 +105,7 @@ func fillBoxes(ctx context.Context, j *baseJob) error {
 			for _, bi := range ba.Items {
 				i := photocycle.PackageBoxItem{
 					BoxID:   bg.ID,
-					OrderID: fmt.Sprintf("%d-%d", g.Source, bi.OrderID),
+					OrderID: fmt.Sprintf("%d-%d", group.Source, bi.OrderID),
 					Alias:   bi.Alias,
 					Type:    bi.Type,
 					From:    bi.From,
@@ -83,9 +113,9 @@ func fillBoxes(ctx context.Context, j *baseJob) error {
 				}
 				bg.Items = append(bg.Items, i)
 			}
-			g.Boxes = append(g.Boxes, bg)
+			group.Boxes = append(group.Boxes, bg)
 		}
-		filled = append(filled, g)
+		filled = append(filled, group)
 	}
 	//persist && del processed
 	err = j.repo.PackageAddWithBoxes(ctx, filled)

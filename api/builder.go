@@ -1,13 +1,32 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/egorka-gh/photocycle"
 	"github.com/spf13/cast"
 )
+
+//CreateBuilder creates builder
+func CreateBuilder(rep photocycle.Repository) (*Builder, error) {
+	fm, err := rep.GetJSONMaps(context.Background())
+	if err != nil {
+		return nil, fmt.Errorf("Error get JSONMaps from repository %q", err.Error())
+	}
+	dm, err := rep.GetDeliveryMaps(context.Background())
+	if err != nil {
+		return nil, fmt.Errorf("Error get GetDeliveryMaps from repository %q", err.Error())
+	}
+	b := &Builder{
+		jmap:            fm,
+		deliveryMapping: dm,
+	}
+	return b, nil
+}
 
 //Builder builds photocycle models by json keys from database
 type Builder struct {

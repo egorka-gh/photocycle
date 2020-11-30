@@ -19,7 +19,7 @@ type Repository interface {
 	GetSourceUrls(ctx context.Context) ([]SourceURL, error)
 	GetNewPackages(ctx context.Context) ([]PackageNew, error)
 	NewPackageUpdate(ctx context.Context, g PackageNew) error
-	PackageAddWithBoxes(ctx context.Context, packages []PackageNew) error
+	PackageAddWithBoxes(ctx context.Context, packages []*Package) error
 
 	CreateOrder(ctx context.Context, o Order) error
 	LoadOrder(ctx context.Context, id string) (Order, error)

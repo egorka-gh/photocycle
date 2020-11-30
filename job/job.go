@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/egorka-gh/photocycle"
+	"github.com/egorka-gh/photocycle/api"
 	log "github.com/go-kit/kit/log"
 )
 
@@ -33,8 +34,9 @@ type Job interface {
 //FillBox creates FillBox job
 func FillBox() Job {
 	return &baseJob{
-		name:   "FillBox",
-		doFunc: fillBoxes,
+		name:     "FillBox",
+		initFunc: initFillBoxes,
+		doFunc:   fillBoxes,
 	}
 }
 
@@ -42,6 +44,7 @@ type baseJob struct {
 	name     string
 	repo     photocycle.Repository
 	logger   log.Logger
+	builder  *api.Builder
 	initFunc func(j *baseJob) error
 	doFunc   func(ctx context.Context, j *baseJob) error
 }
