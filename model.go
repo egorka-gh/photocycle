@@ -180,7 +180,7 @@ type Package struct {
 	State            int       `json:"state" db:"state"`
 	StateDate        time.Time `json:"state_date" db:"state_date"`
 	ExecutionDate    Date      `json:"execution_date" db:"execution_date"`
-	NativeDeliveryID int       `json:"delivery_id"`
+	NativeDeliveryID int       `json:"native_delivery_id"`
 	DeliveryID       int       `db:"delivery_id"`
 	DeliveryName     string    `json:"delivery_name" db:"delivery_name"`
 	SrcState         int       `json:"src_state" db:"src_state"`

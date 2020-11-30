@@ -39,7 +39,8 @@ func (b *basicRepository) Close() {
 }
 
 func (b *basicRepository) GetSourceUrls(ctx context.Context) ([]photocycle.SourceURL, error) {
-	var sql string = "SELECT s.id, s.type,  s1.url, s1.appkey FROM sources s INNER JOIN services s1 ON s.id = s1.src_id AND s1.srvc_id = 1 AND s1.url!='' WHERE s.online>0"
+	//	var sql string = "SELECT s.id, s.type,  s1.url, s1.appkey FROM sources s INNER JOIN services s1 ON s.id = s1.src_id AND s1.srvc_id = 1 AND s1.url!='' WHERE s.online>0"
+	var sql string = "SELECT s.id, s.type,  s1.url, s1.appkey FROM sources s INNER JOIN services s1 ON s.id = s1.src_id AND s1.srvc_id = 1 AND s1.url!=''"
 	res := []photocycle.SourceURL{}
 	err := b.db.SelectContext(ctx, &res, sql)
 	return res, err

@@ -1,7 +1,6 @@
 package api
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"testing"
@@ -16,35 +15,25 @@ func TestBuildPackage(t *testing.T) {
 		t.Errorf("Error create repository %q", err.Error())
 		return
 	}
-
-	fm, err := rep.GetJSONMaps(context.Background())
-	if err != nil {
-		t.Errorf("Error get JSONMaps from repository %q", err.Error())
-		return
-	}
-	dm, err := rep.GetDeliveryMaps(context.Background())
-	if err != nil {
-		t.Errorf("Error get GetDeliveryMaps from repository %q", err.Error())
-		return
-	}
-
-	client, err := NewClient(http.DefaultClient, "https://fabrika-fotoknigi.ru/", "")
+	//http://fotokniga.by/apiclient.php?cmd=group&args[number]=44059
+	client, err := NewClient(http.DefaultClient, "http://fotokniga.by/", "")
 	if err != nil {
 		t.Errorf("Error create client %q", err.Error())
 		return
 	}
-	g, err := client.GetGroup(nil, 349141)
+	g, err := client.GetGroup(nil, 44059)
 	if err != nil {
 		t.Errorf("Error get group  %q", err.Error())
 		return
 	}
 	fmt.Printf("Group:  %v\n", g)
 
-	builder := &Builder{
-		jmap:            fm,
-		deliveryMapping: dm,
+	builder, err := CreateBuilder(rep)
+	if err != nil {
+		t.Errorf("Error create builder  %q", err.Error())
+		return
 	}
-	p, err := builder.BuildPackage(11, g)
+	p, err := builder.BuildPackage(8, g)
 	if err != nil {
 		t.Errorf("Error build package  %q", err.Error())
 		return
