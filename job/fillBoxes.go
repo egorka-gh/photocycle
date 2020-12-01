@@ -22,6 +22,7 @@ func initFillBoxes(j *baseJob) error {
 func fillBoxes(ctx context.Context, j *baseJob) error {
 	//create api clients map
 	var clients = make(map[int]api.FFService)
+	var hasBox = make(map[int]bool)
 	su, err := j.repo.GetSourceUrls(ctx)
 	if err != nil {
 		return fmt.Errorf("repository.GetSourceUrls error: %s", err.Error())
@@ -39,6 +40,7 @@ func fillBoxes(ctx context.Context, j *baseJob) error {
 		}
 
 		clients[u.ID] = cl
+		hasBox[u.ID] = u.HasBoxes
 	}
 	//fetch not processed groups
 	grps, err := j.repo.GetNewPackages(ctx)
@@ -55,9 +57,10 @@ func fillBoxes(ctx context.Context, j *baseJob) error {
 		if !ok {
 			return fmt.Errorf("Source %d not found", g.Source)
 		}
-		//loadfrom site
+		//load boxes from site (with hasBox or not )
 		gbs, err := cl.GetBoxes(ctx, g.ID)
-		if err != nil || gbs == nil || len(gbs.Boxes) == 0 {
+		//process err only if site hasBox
+		if hasBox[g.Source] && (err != nil || gbs == nil || len(gbs.Boxes) == 0) {
 			//boxes not filled or some error
 			if err != nil {
 				j.logger.Log("error", fmt.Sprintf("api.GetBoxes error: %s", err.Error()))

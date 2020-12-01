@@ -237,10 +237,11 @@ type PackageBoxItem struct {
 
 //SourceURL dto to get url for api calls
 type SourceURL struct {
-	ID     int    `db:"id"`
-	URL    string `db:"url"`
-	Type   int    `db:"type"`
-	AppKey string `db:"appkey"`
+	ID       int    `db:"id"`
+	URL      string `db:"url"`
+	Type     int    `db:"type"`
+	AppKey   string `db:"appkey"`
+	HasBoxes bool   `db:"has_boxes"`
 }
 
 //JSONMap dto to get url for api calls
