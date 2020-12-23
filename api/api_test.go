@@ -13,7 +13,7 @@ func TestGroupBoxes(t *testing.T) {
 		t.Errorf("Error create client %q", err.Error())
 		return
 	}
-	b, err := client.GetBoxes(nil, 43314)
+	b, err := client.GetBoxes(nil, 45848)
 	if err != nil {
 		t.Errorf("Error %q", err.Error())
 		return

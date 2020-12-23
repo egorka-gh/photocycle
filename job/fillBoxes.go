@@ -76,6 +76,8 @@ func fillBoxes(ctx context.Context, j *baseJob) error {
 			}
 		}
 
+		//j.logger.Log("boxes", fmt.Sprintf("%v", gbs))
+
 		//get group (raw)
 		raw, err := cl.GetGroup(ctx, g.ID)
 		if err != nil {
