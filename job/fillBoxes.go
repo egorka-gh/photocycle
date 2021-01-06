@@ -112,7 +112,7 @@ func fillBoxes(ctx context.Context, j *baseJob) error {
 				for _, bi := range ba.Items {
 					i := photocycle.PackageBoxItem{
 						BoxID:   bg.ID,
-						OrderID: fmt.Sprintf("%d-%d", group.Source, bi.OrderID),
+						OrderID: fmt.Sprintf("%d_%d", group.Source, bi.OrderID),
 						Alias:   bi.Alias,
 						Type:    bi.Type,
 						From:    bi.From,
