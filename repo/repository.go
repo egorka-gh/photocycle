@@ -88,7 +88,7 @@ func (b *basicRepository) PackageAddWithBoxes(ctx context.Context, packages []*p
 	xVals := make([]string, 0, len(packages)*5)
 	xArgs := []interface{}{}
 
-	pSQL := "INSERT INTO package_box_item (box_id, order_id, alias, item_from, item_to, type) VALUES "
+	pSQL := "INSERT INTO package_box_item (box_id, order_id, alias, item_from, item_to, type ,state ,state_date) VALUES "
 	pVals := make([]string, 0, len(packages)*5*3)
 	pArgs := []interface{}{}
 	for _, o := range packages {
@@ -110,11 +110,11 @@ func (b *basicRepository) PackageAddWithBoxes(ctx context.Context, packages []*p
 		}
 		//boxes
 		for _, x := range o.Boxes {
-			xVals = append(xVals, "(?, ?, ?, ?, ?, ?, ?, 100, NOW())")
+			xVals = append(xVals, "(?, ?, ?, ?, ?, ?, ?, 200, NOW())")
 			xArgs = append(xArgs, x.Source, x.PackageID, x.ID, x.Num, x.Barcode, x.Price, x.Weight)
 			//box items
 			for _, p := range x.Items {
-				pVals = append(pVals, "(?, ?, ?, ?, ?, ?)")
+				pVals = append(pVals, "(?, ?, ?, ?, ?, ?, 200, NOW())")
 				pArgs = append(pArgs, p.BoxID, p.OrderID, p.Alias, p.From, p.To, p.Type)
 			}
 		}
