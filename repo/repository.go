@@ -110,12 +110,12 @@ func (b *basicRepository) PackageAddWithBoxes(ctx context.Context, packages []*p
 		}
 		//boxes
 		for _, x := range o.Boxes {
-			xVals = append(xVals, "(?, ?, ?, ?, ?, ?, ?, 200, NOW())")
-			xArgs = append(xArgs, x.Source, x.PackageID, x.ID, x.Num, x.Barcode, x.Price, x.Weight)
+			xVals = append(xVals, "(?, ?, ?, ?, ?, ?, ?, ?, NOW())")
+			xArgs = append(xArgs, x.Source, x.PackageID, x.ID, x.Num, x.Barcode, x.Price, x.Weight, photocycle.StateWaiteProduction)
 			//box items
 			for _, p := range x.Items {
-				pVals = append(pVals, "(?, ?, ?, ?, ?, ?, 200, NOW())")
-				pArgs = append(pArgs, p.BoxID, p.OrderID, p.Alias, p.From, p.To, p.Type)
+				pVals = append(pVals, "(?, ?, ?, ?, ?, ?, ?, NOW())")
+				pArgs = append(pArgs, p.BoxID, p.OrderID, p.Alias, p.From, p.To, p.Type, photocycle.StateWaiteProduction)
 			}
 		}
 	}
