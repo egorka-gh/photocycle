@@ -39,6 +39,7 @@ type Repository interface {
 	GetCurrentOrders(ctx context.Context, source int) ([]GroupState, error)
 	GetJSONMaps(ctx context.Context) (map[int][]JSONMap, error)
 	GetDeliveryMaps(ctx context.Context) (map[int]map[int]DeliveryTypeMapping, error)
+	GetPrintPostedEFI(ctx context.Context) ([]PrintPostedEFI, error)
 	Close()
 }
 

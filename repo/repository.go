@@ -484,3 +484,17 @@ func (b *basicRepository) GetDeliveryMaps(ctx context.Context) (map[int]map[int]
 
 	return resMap, err
 }
+
+func (b *basicRepository) GetPrintPostedEFI(ctx context.Context) ([]photocycle.PrintPostedEFI, error) {
+	res := []photocycle.PrintPostedEFI{}
+	var sb strings.Builder
+	sb.WriteString("SELECT pg.id, COUNT(*) fileCount")
+	sb.WriteString(" FROM print_group pg")
+	sb.WriteString(" INNER JOIN lab l ON pg.destination = l.id AND l.efi = 1")
+	sb.WriteString(" INNER JOIN print_group_file pgf ON pg.id = pgf.print_group")
+	sb.WriteString(" WHERE pg.state = 250")
+	sb.WriteString(" GROUP BY pg.id")
+	sql := sb.String()
+	err := b.db.SelectContext(ctx, &res, sql)
+	return res, err
+}
