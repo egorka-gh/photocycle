@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/egorka-gh/photocycle"
-	"github.com/egorka-gh/photocycle/api"
+	"github.com/egorka-gh/photocycle/infrastructure/api"
 )
 
 func initFillBoxes(j *baseJob) error {

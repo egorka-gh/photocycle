@@ -7,8 +7,8 @@ import (
 	"path"
 
 	"github.com/egorka-gh/photocycle"
+	"github.com/egorka-gh/photocycle/infrastructure/repo"
 	"github.com/egorka-gh/photocycle/job"
-	"github.com/egorka-gh/photocycle/repo"
 	log "github.com/go-kit/kit/log"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/kardianos/osext"

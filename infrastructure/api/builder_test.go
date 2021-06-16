@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/egorka-gh/photocycle"
-	"github.com/egorka-gh/photocycle/repo"
+	"github.com/egorka-gh/photocycle/infrastructure/repo"
 	_ "github.com/go-sql-driver/mysql"
 )
 

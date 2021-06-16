@@ -2,31 +2,32 @@ package job
 
 import (
 	"context"
-	"fmt"
-
-	"github.com/spf13/viper"
+	"net/url"
 )
 
-var efiURL string
-var efiKey string
-
 func initCheckPrinted(j *baseJob) error {
-	efiURL = viper.GetString("efi.url")
-	if efiURL == "" {
-		return fmt.Errorf("initCheckPrinted error: efi.url not set")
-	}
-	efiKey = viper.GetString("efi.key")
-	if efiKey == "" {
-		return fmt.Errorf("initCheckPrinted error: efi.key not set")
-	}
-	//TODO check some else
-
+	//TODO check some
 	return nil
 }
 
 func checkPrinted(ctx context.Context, j *baseJob) error {
 
+	//get printgroups in state printpost
 	pgs, err := j.repo.GetPrintPostedEFI(ctx)
+	if err != nil {
+		return err
+	}
+	if len(pgs) == 0 {
+		//nothig process
+		return nil
+	}
+
+	///live/api/v5/jobs?title=1504660-2-blok001.pdf
+	u := e.eURL.ResolveReference(&url.URL{Path: "live/api/v5/jobs"})
+	data = url.Values{}
+	for _, pg := range pgs {
+
+	}
 
 	return nil
 }

@@ -7,9 +7,9 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/egorka-gh/photocycle/api"
+	"github.com/egorka-gh/photocycle/infrastructure/api"
+	"github.com/egorka-gh/photocycle/infrastructure/repo"
 	"github.com/egorka-gh/photocycle/netprint"
-	"github.com/egorka-gh/photocycle/repo"
 	log "github.com/go-kit/kit/log"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/kardianos/osext"

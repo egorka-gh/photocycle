@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/egorka-gh/photocycle"
-	"github.com/egorka-gh/photocycle/api"
+	"github.com/egorka-gh/photocycle/infrastructure/api"
 	log "github.com/go-kit/kit/log"
 )
 

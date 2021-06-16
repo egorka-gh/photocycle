@@ -1,16 +1,12 @@
 package api
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
 	"strconv"
-	"strings"
 )
 
 // Client represent Service backed by an HTTP server living at the remote instance.
@@ -86,15 +82,15 @@ func (c *Client) GetGroup(ctx context.Context, groupID int) (map[string]interfac
 	}
 	raw, ok := res.(map[string]interface{})
 	if !ok {
-		return raw, errors.New("Empty or wrong responce")
+		return raw, errors.New("empty or wrong responce")
 	}
 	res, ok = raw["result"]
 	if !ok {
-		return raw, errors.New("Empty or wrong responce")
+		return raw, errors.New("empty or wrong responce")
 	}
 	raw, ok = res.(map[string]interface{})
 	if !ok {
-		return raw, errors.New("Empty or wrong responce")
+		return raw, errors.New("empty or wrong responce")
 	}
 	return raw, err
 }
@@ -124,40 +120,46 @@ func (c *Client) GetBoxes(ctx context.Context, groupID int) (*GroupBoxes, error)
 	return res, err
 }
 
-func statusError(code int) error {
-	return fmt.Errorf("Wrong http status %d. %s", code, http.StatusText(code))
-}
-
 func (c *Client) newRequest(ctx context.Context, method, path string, data url.Values) (*http.Request, error) {
 	rel := &url.URL{Path: path}
 	u := c.BaseURL.ResolveReference(rel)
-	if data == nil {
-		data = url.Values{}
-	}
 	if data.Get("appkey") == "" {
 		data.Set("appkey", c.AppKey)
 	}
-	var reader io.Reader
-	if method == "POST" {
-		reader = strings.NewReader(data.Encode())
-	} else {
-		//api bug with reserved char :
-		q := data.Encode()
-		q = strings.Replace(q, "%3A", ":", -1)
-		q = strings.Replace(q, "%5B", "[", -1)
-		q = strings.Replace(q, "%5D", "]", -1)
-		u.RawQuery = q //data.Encode()
-	}
-	//fmt.Println(data.Encode())
-	req, err := http.NewRequestWithContext(ctx, method, u.String(), reader)
+	req, err := newRequest(ctx, method, u, data, true)
 	if err != nil {
 		return nil, err
 	}
 
-	if method == "POST" {
-		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	}
-	req.Header.Set("Accept", "application/json")
+	/*
+		if data == nil {
+			data = url.Values{}
+		}
+		if data.Get("appkey") == "" {
+			data.Set("appkey", c.AppKey)
+		}
+		var reader io.Reader
+		if method == "POST" {
+			reader = strings.NewReader(data.Encode())
+		} else {
+			//api bug with reserved char :
+			q := data.Encode()
+			q = strings.Replace(q, "%3A", ":", -1)
+			q = strings.Replace(q, "%5B", "[", -1)
+			q = strings.Replace(q, "%5D", "]", -1)
+			u.RawQuery = q //data.Encode()
+		}
+		//fmt.Println(data.Encode())
+		req, err := http.NewRequestWithContext(ctx, method, u.String(), reader)
+		if err != nil {
+			return nil, err
+		}
+
+		if method == "POST" {
+			req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		}
+		req.Header.Set("Accept", "application/json")
+	*/
 	if c.UserAgent != "" {
 		req.Header.Set("User-Agent", c.UserAgent)
 	}
@@ -165,25 +167,36 @@ func (c *Client) newRequest(ctx context.Context, method, path string, data url.V
 }
 
 func (c *Client) do(req *http.Request, v interface{}) (*http.Response, error) {
-	resp, err := c.httpClient.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-	var raw bytes.Buffer
-	tee := io.TeeReader(resp.Body, &raw)
-	err = json.NewDecoder(tee).Decode(v)
-	if err != nil {
-		errStr := raw.String()
-		err = fmt.Errorf("%s; Response: %s", err.Error(), errStr)
+	//TODO refactor with helper
 
-		raw.Reset()
-		raw.WriteString(errStr)
-		ae := apiError{}
-		if e := json.NewDecoder(&raw).Decode(&ae); e == nil && (ae.Code != 0 || ae.Error != "") {
-			//intrenal api error
-			err = fmt.Errorf("Error: %s; Code: %d; Exception: %s", ae.Error, ae.Code, ae.Exception)
+	ae := apiError{}
+	resp, err := do(c.httpClient, req, v, &ae)
+
+	/*
+		resp, err := c.httpClient.Do(req)
+		if err != nil {
+			return nil, err
 		}
+		defer resp.Body.Close()
+		var raw bytes.Buffer
+		tee := io.TeeReader(resp.Body, &raw)
+		err = json.NewDecoder(tee).Decode(v)
+		if err != nil {
+			errStr := raw.String()
+			err = fmt.Errorf("%s; Response: %s", err.Error(), errStr)
+
+			raw.Reset()
+			raw.WriteString(errStr)
+			ae := apiError{}
+			if e := json.NewDecoder(&raw).Decode(&ae); e == nil && (ae.Code != 0 || ae.Error != "") {
+				//intrenal api error
+				err = fmt.Errorf("Error: %s; Code: %d; Exception: %s", ae.Error, ae.Code, ae.Exception)
+			}
+		}
+	*/
+	if ae.Code != 0 || ae.Error != "" {
+		//intrenal api error
+		err = fmt.Errorf("error: %s; Code: %d; Exception: %s", ae.Error, ae.Code, ae.Exception)
 	}
 	return resp, err
 }
