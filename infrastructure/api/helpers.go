@@ -51,16 +51,20 @@ func do(httpClient *http.Client, req *http.Request, value, errorvalue interface{
 	var raw bytes.Buffer
 	tee := io.TeeReader(resp.Body, &raw)
 	err = json.NewDecoder(tee).Decode(value)
+	errStr := raw.String()
+	//not a json?
 	if err != nil {
-		errStr := raw.String()
 		err = fmt.Errorf("%s; Response: %s", err.Error(), errStr)
+		return nil, err
+	}
 
+	//can be error response
+	if errorvalue != nil {
 		raw.Reset()
 		raw.WriteString(errStr)
-		if errorvalue != nil {
-			json.NewDecoder(&raw).Decode(errorvalue)
-		}
+		json.NewDecoder(&raw).Decode(errorvalue)
 	}
+
 	return resp, err
 }
 

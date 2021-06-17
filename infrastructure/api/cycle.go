@@ -196,7 +196,7 @@ func (c *Client) do(req *http.Request, v interface{}) (*http.Response, error) {
 	*/
 	if ae.Code != 0 || ae.Error != "" {
 		//intrenal api error
-		err = fmt.Errorf("error: %s; Code: %d; Exception: %s", ae.Error, ae.Code, ae.Exception)
+		err = fmt.Errorf("%s; Code: %d; Exception: %s", ae.Error, ae.Code, ae.Exception)
 	}
 	return resp, err
 }

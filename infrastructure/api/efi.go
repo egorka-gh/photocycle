@@ -1,11 +1,10 @@
-package efi
+package api
 
 import (
 	"context"
 	"fmt"
 	"net/http"
 	"net/url"
-	"strings"
 	"time"
 
 	"github.com/spf13/viper"
@@ -23,7 +22,7 @@ type EFI struct {
 }
 
 //New init new EFI
-func New() (*EFI, error) {
+func NewEFI() (*EFI, error) {
 	us := viper.GetString("efi.url")
 	if us == "" {
 		return nil, fmt.Errorf("initCheckPrinted error: efi.url not set")
@@ -54,6 +53,17 @@ func New() (*EFI, error) {
 		user:    user,
 		pass:    pass,
 	}, nil
+}
+
+func (e *EFI) do(req *http.Request, v interface{}) (*http.Response, error) {
+
+	ee := efiError{}
+	resp, err := do(e.client, req, v, &ee)
+	if ee.Code != 0 {
+		//intrenal api error
+		err = fmt.Errorf("сode: %d; message: %s; details: %v ", ee.Code, ee.Message, ee.Errors)
+	}
+	return resp, err
 }
 
 /*
@@ -93,23 +103,31 @@ err responce
 
 func (e *EFI) Login(ctx context.Context) error {
 	//https://localhost/live/api/v5/login/
-	u := e.baseURL.ResolveReference(&url.URL{Path: "job/"})
+	u := e.baseURL.ResolveReference(&url.URL{Path: "login/"})
 	data := url.Values{}
 	data.Set("apikey", e.key)
 	data.Set("username", e.user)
 	data.Set("password", e.pass)
-	r := strings.NewReader(data.Encode())
-	req, err := http.NewRequestWithContext(ctx, "POST", u.String(), r)
+
+	req, err := newRequest(ctx, "POST", u, data, false)
 	if err != nil {
 		return err
 	}
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-
+	var res interface{}
+	r, err := e.do(req, res)
+	if err != nil {
+		return err
+	}
+	if r.StatusCode != http.StatusOK {
+		return statusError(r.StatusCode)
+	}
+	return nil
 }
 
 func (e *EFI) List(title string) ([]Item, error) {
 	//https://localhost/live/api/v5/jobs?title=1504660-2-blok001.pdf
 
+	return []Item{}, nil
 }
 
 type yesNo bool
@@ -134,4 +152,10 @@ func (yn *yesNo) UnmarshalJSON(b []byte) error {
 	y := yesNo(string(b) == "OK")
 	yn = &y
 	return nil
+}
+
+type efiError struct {
+	Code    int        `json:"code"`
+	Message string     `json:"message"`
+	Errors  []efiError `json:"errors"`
 }
