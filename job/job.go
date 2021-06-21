@@ -40,6 +40,15 @@ func FillBox() Job {
 	}
 }
 
+//PrintedEFI creates job to check in EFI if posted printgroups are printed
+func PrintedEFI() Job {
+	return &baseJob{
+		name:     "PrintedEFI",
+		initFunc: initCheckPrinted,
+		doFunc:   checkPrinted,
+	}
+}
+
 type baseJob struct {
 	name     string
 	repo     photocycle.Repository
@@ -47,6 +56,7 @@ type baseJob struct {
 	builder  *api.Builder
 	initFunc func(j *baseJob) error
 	doFunc   func(ctx context.Context, j *baseJob) error
+	debug    bool
 }
 
 func (j *baseJob) Init() error {
@@ -67,7 +77,6 @@ func (j *baseJob) Do(ctx context.Context) {
 			j.logger.Log("Error", err)
 		}
 	}
-	return
 }
 
 //Runer job runer
@@ -86,7 +95,7 @@ type baseRuner struct {
 //Run runs jobs periodicaly, blocks caller till get quit
 func (r *baseRuner) Run(quit chan struct{}) error {
 	if len(r.jobs) == 0 {
-		err := errors.New("No jobs to do")
+		err := errors.New("no jobs to do")
 		return err
 	}
 	if r.logger == nil {

@@ -503,7 +503,8 @@ func (b *basicRepository) SetPrintedEFI(ctx context.Context, printgroupID string
 	if b.readOnly {
 		return nil
 	}
-	sql := "call pp_StartOrders(?, ?, ?)"
-	_, err := b.db.ExecContext(ctx, sql, source, group, skipID)
+	//PROCEDURE techEfiPgPrinted(IN pPgroup varchar(50), IN pTechPoint int)
+	sql := "call techEfiPgPrinted( ?, 0)"
+	_, err := b.db.ExecContext(ctx, sql, printgroupID)
 	return err
 }

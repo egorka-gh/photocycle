@@ -5,10 +5,12 @@ import (
 	"fmt"
 
 	"github.com/egorka-gh/photocycle/infrastructure/api"
+	"github.com/spf13/viper"
 )
 
 func initCheckPrinted(j *baseJob) error {
 	//TODO check some
+	j.debug = viper.GetBool("efi.debug")
 	return nil
 }
 
@@ -48,7 +50,14 @@ func checkPrinted(ctx context.Context, j *baseJob) error {
 		if len(m) == p.FilesCount {
 			//all files printed
 			//mark in database
-			//j.repo.set
+			if j.debug {
+				j.logger.Log(fmt.Sprintf("printgroup %s, complited", p.PrintgroupID))
+			} else {
+				err = j.repo.SetPrintedEFI(ctx, p.PrintgroupID)
+				if err != nil {
+					return err
+				}
+			}
 		}
 	}
 

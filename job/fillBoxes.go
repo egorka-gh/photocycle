@@ -55,7 +55,7 @@ func fillBoxes(ctx context.Context, j *baseJob) error {
 	for _, g := range grps {
 		cl, ok := clients[g.Source]
 		if !ok {
-			return fmt.Errorf("Source %d not found", g.Source)
+			return fmt.Errorf("source %d not found", g.Source)
 		}
 		//load boxes from site (with hasBox or not )
 		gbs, err := cl.GetBoxes(ctx, g.ID)

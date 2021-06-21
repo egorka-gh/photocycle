@@ -140,10 +140,15 @@ func initRuner() (job.Runer, photocycle.Repository, error) {
 	//open database
 	rep, err := repo.New(viper.GetString("mysql"), false)
 	if err != nil {
-		return nil, nil, fmt.Errorf("Ошибка подключения к базе данных %s", err.Error())
+		return nil, nil, fmt.Errorf("ошибка подключения к базе данных %s", err.Error())
 	}
 	logger := initLoger(viper.GetString("folders.log"))
-	r := job.NewRuner(viper.GetInt("run.interval"), rep, logger, job.FillBox())
+	jobs := make([]job.Job, 0, 5)
+	jobs = append(jobs, job.FillBox())
+	if viper.GetBool("efi.active") {
+		jobs = append(jobs, job.PrintedEFI())
+	}
+	r := job.NewRuner(viper.GetInt("run.interval"), rep, logger, jobs...)
 	return r, rep, nil
 }
 
