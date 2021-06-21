@@ -2,7 +2,9 @@ package job
 
 import (
 	"context"
-	"net/url"
+	"fmt"
+
+	"github.com/egorka-gh/photocycle/infrastructure/api"
 )
 
 func initCheckPrinted(j *baseJob) error {
@@ -22,11 +24,32 @@ func checkPrinted(ctx context.Context, j *baseJob) error {
 		return nil
 	}
 
-	///live/api/v5/jobs?title=1504660-2-blok001.pdf
-	u := e.eURL.ResolveReference(&url.URL{Path: "live/api/v5/jobs"})
-	data = url.Values{}
-	for _, pg := range pgs {
+	e, err := api.NewEFI()
+	if err != nil {
+		return err
+	}
 
+	err = e.Login(ctx)
+	if err != nil {
+		return err
+	}
+
+	for _, p := range pgs {
+		itms, err := e.List(ctx, fmt.Sprintf("%s*", p.PrintgroupID))
+		if err != nil {
+			return err
+		}
+		m := make(map[string]bool)
+		for _, it := range itms {
+			if it.Printed {
+				m[it.File] = true
+			}
+		}
+		if len(m) == p.FilesCount {
+			//all files printed
+			//mark in database
+			//j.repo.set
+		}
 	}
 
 	return nil

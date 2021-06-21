@@ -124,10 +124,25 @@ func (e *EFI) Login(ctx context.Context) error {
 	return nil
 }
 
-func (e *EFI) List(title string) ([]Item, error) {
+func (e *EFI) List(ctx context.Context, title string) ([]Item, error) {
 	//https://localhost/live/api/v5/jobs?title=1504660-2-blok001.pdf
+	u := e.baseURL.ResolveReference(&url.URL{Path: "jobs/"})
+	data := url.Values{}
+	data.Set("title", title)
+	req, err := newRequest(ctx, "GET", u, data, false)
+	if err != nil {
+		return nil, err
+	}
+	var res []Item
+	r, err := e.do(req, res)
+	if err != nil {
+		return nil, err
+	}
+	if r.StatusCode != http.StatusOK {
+		return nil, statusError(r.StatusCode)
+	}
+	return res, nil
 
-	return []Item{}, nil
 }
 
 type yesNo bool

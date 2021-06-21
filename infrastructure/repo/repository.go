@@ -498,3 +498,12 @@ func (b *basicRepository) GetPrintPostedEFI(ctx context.Context) ([]photocycle.P
 	err := b.db.SelectContext(ctx, &res, sql)
 	return res, err
 }
+
+func (b *basicRepository) SetPrintedEFI(ctx context.Context, printgroupID string) error {
+	if b.readOnly {
+		return nil
+	}
+	sql := "call pp_StartOrders(?, ?, ?)"
+	_, err := b.db.ExecContext(ctx, sql, source, group, skipID)
+	return err
+}
