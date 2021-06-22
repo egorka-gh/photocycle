@@ -40,7 +40,7 @@ func (b *basicRepository) Close() {
 
 func (b *basicRepository) GetSourceUrls(ctx context.Context) ([]photocycle.SourceURL, error) {
 	//	var sql string = "SELECT s.id, s.type,  s1.url, s1.appkey FROM sources s INNER JOIN services s1 ON s.id = s1.src_id AND s1.srvc_id = 1 AND s1.url!='' WHERE s.online>0"
-	var sql string = "SELECT s.id, s.type,  s1.url, s1.appkey, s.has_boxes FROM sources s INNER JOIN services s1 ON s.id = s1.src_id AND s1.srvc_id = 1 AND s1.url!=''"
+	var sql string = "SELECT s.id, s.type,  s1.url, s1.appkey, s.has_boxes FROM sources s INNER JOIN services s1 ON s.id = s1.src_id AND s1.srvc_id = 1 AND s1.url!='' WHERE s.online =1"
 	res := []photocycle.SourceURL{}
 	err := b.db.SelectContext(ctx, &res, sql)
 	return res, err
@@ -48,7 +48,7 @@ func (b *basicRepository) GetSourceUrls(ctx context.Context) ([]photocycle.Sourc
 
 func (b *basicRepository) GetNewPackages(ctx context.Context) ([]photocycle.PackageNew, error) {
 	//var sql string = "SELECT source, id, client_id, created, attempt FROM package_new WHERE attempt < 10"
-	var sql string = "SELECT source, id, client_id, created, attempt FROM package_new"
+	var sql string = "SELECT p.source, p.id, p.client_id, p.created, p.attempt FROM package_new p INNER JOIN sources s ON p.source = s.id AND s.online=1"
 	res := []photocycle.PackageNew{}
 	err := b.db.SelectContext(ctx, &res, sql)
 	return res, err

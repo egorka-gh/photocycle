@@ -53,26 +53,32 @@ func fillBoxes(ctx context.Context, j *baseJob) error {
 	//get boxes first
 	filled := make([]*photocycle.Package, 0, len(grps))
 	for _, g := range grps {
+		//check cancel
+		if err := ctx.Err(); err != nil {
+			return err
+		}
 		cl, ok := clients[g.Source]
 		if !ok {
 			return fmt.Errorf("source %d not found", g.Source)
 		}
-		//load boxes from site (with hasBox or not )
-		gbs, err := cl.GetBoxes(ctx, g.ID)
-		//process err only if site hasBox
-		if hasBox[g.Source] && (err != nil || gbs == nil || len(gbs.Boxes) == 0) {
-			//boxes not filled or some error
-			if err != nil {
-				j.logger.Log("error", fmt.Sprintf("api.GetBoxes error: %s", err.Error()))
+		var gbs *api.GroupBoxes
+		if hasBox[g.Source] {
+			//load boxes from site
+			gbs, err = cl.GetBoxes(ctx, g.ID)
+			if err != nil || gbs == nil || len(gbs.Boxes) == 0 {
+				//boxes not filled or some error
+				if err != nil {
+					j.logger.Log("error", fmt.Sprintf("source %d; group %d; api.GetBoxes error: %s", g.Source, g.ID, err.Error()))
 
-			}
-			//increment err counter and skip
-			g.Attempt++
-			if g.Attempt < 3 {
-				//maybe it's not ready
-				//try next time
-				j.repo.NewPackageUpdate(ctx, g)
-				continue
+				}
+				//increment err counter and skip
+				g.Attempt++
+				if g.Attempt < 3 {
+					//maybe it's not ready
+					//try next time
+					j.repo.NewPackageUpdate(ctx, g)
+					continue
+				}
 			}
 		}
 
@@ -81,14 +87,14 @@ func fillBoxes(ctx context.Context, j *baseJob) error {
 		//get group (raw)
 		raw, err := cl.GetGroup(ctx, g.ID)
 		if err != nil {
-			j.logger.Log("error", fmt.Sprintf("api.GetGroup error: %s", err.Error()))
+			j.logger.Log("error", fmt.Sprintf("source %d; group %d; api.GetGroup error: %s", g.Source, g.ID, err.Error()))
 			g.Attempt++
 			j.repo.NewPackageUpdate(ctx, g)
 			continue
 		}
 		group, err := j.builder.BuildPackage(g.Source, raw)
 		if err != nil {
-			j.logger.Log("error", fmt.Sprintf("api.BuildPackage error: %s", err.Error()))
+			j.logger.Log("error", fmt.Sprintf("source %d; group %d; api.BuildPackage error: %s", g.Source, g.ID, err.Error()))
 			g.Attempt++
 			j.repo.NewPackageUpdate(ctx, g)
 			continue
@@ -96,7 +102,7 @@ func fillBoxes(ctx context.Context, j *baseJob) error {
 
 		//fill boxes
 		group.Boxes = make([]photocycle.PackageBox, 0)
-		// can be nil if site not suppert boxes
+		// can be nil if site not support boxes
 		if gbs != nil {
 			for _, ba := range gbs.Boxes {
 				bg := photocycle.PackageBox{

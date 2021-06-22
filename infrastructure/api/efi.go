@@ -2,8 +2,11 @@ package api
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
+	"net"
 	"net/http"
+	"net/http/cookiejar"
 	"net/url"
 	"time"
 
@@ -45,11 +48,36 @@ func NewEFI() (*EFI, error) {
 	if pass == "" {
 		return nil, fmt.Errorf("initCheckPrinted error: efi.pass not set")
 	}
+	jar, err := cookiejar.New(nil)
+	if err != nil {
+		return nil, fmt.Errorf("got error while creating cookie jar %s", err.Error())
+	}
 
+	cl := &http.Client{
+		Jar: jar,
+		Transport: &http.Transport{
+			Proxy: http.ProxyFromEnvironment,
+			DialContext: (&net.Dialer{
+				Timeout:   30 * time.Second,
+				KeepAlive: 30 * time.Second,
+				DualStack: true,
+			}).DialContext,
+			ForceAttemptHTTP2:     true,
+			MaxIdleConns:          100,
+			IdleConnTimeout:       90 * time.Second,
+			TLSHandshakeTimeout:   10 * time.Second,
+			ExpectContinueTimeout: 1 * time.Second,
+			TLSClientConfig: &tls.Config{
+				// UNSAFE!
+				// DON'T USE IN PRODUCTION!
+				InsecureSkipVerify: true,
+			},
+		},
+	}
 	return &EFI{
 		baseURL: u,
 		key:     key,
-		client:  &http.Client{Timeout: time.Second * 40},
+		client:  cl,
 		user:    user,
 		pass:    pass,
 	}, nil
@@ -66,41 +94,6 @@ func (e *EFI) do(req *http.Request, v interface{}) (*http.Response, error) {
 	return resp, err
 }
 
-/*
-ok responce
-{
-    "time": "2021-06-16T23:01:40+03:00",
-    "data": {
-        "kind": "FieryCutSheetAuthentication",
-        "item": {
-            "authenticated": true,
-            "fiery": true
-        },
-        "_links": [
-            {
-                "rel": "self",
-                "href": "https://localhost/live/api/v5/login/"
-            }
-        ]
-    }
-}
-err responce
-{
-    "error": {
-        "code": 401,
-        "message": "Unauthorized",
-        "errors": [
-            {
-                "domain": "Harmony",
-                "reason": "Harmony function returned non-zero code",
-                "code": -2,
-                "message": "Invalid username/password, or the permission set for this service do not allow you access to the service."
-            }
-        ]
-    }
-}
-*/
-
 func (e *EFI) Login(ctx context.Context) error {
 	//https://localhost/live/api/v5/login/
 	u := e.baseURL.ResolveReference(&url.URL{Path: "login/"})
@@ -113,8 +106,8 @@ func (e *EFI) Login(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	var res interface{}
-	r, err := e.do(req, res)
+	var m map[string]interface{}
+	r, err := e.do(req, &m)
 	if err != nil {
 		return err
 	}
@@ -133,16 +126,35 @@ func (e *EFI) List(ctx context.Context, title string) ([]Item, error) {
 	if err != nil {
 		return nil, err
 	}
-	var res []Item
-	r, err := e.do(req, res)
+	var res listDTO
+	r, err := e.do(req, &res)
 	if err != nil {
 		return nil, err
 	}
 	if r.StatusCode != http.StatusOK {
 		return nil, statusError(r.StatusCode)
 	}
-	return res, nil
+	return res.Data.Items, nil
 
+}
+
+//Item represent EFI print job
+type Item struct {
+	File    string `json:"title"`
+	Printed yesNo  `json:"print status"`
+}
+
+// "data": {
+// 	"totalItems": 4,
+// 	"kind": "FieryCutSheetJobs",
+// 	"items": [
+
+type listData struct {
+	TotalItems int    `json:"totalItems"`
+	Items      []Item `json:"items"`
+}
+type listDTO struct {
+	Data listData `json:"data"`
 }
 
 type yesNo bool
@@ -154,12 +166,6 @@ type yesNo bool
 "state": "completed",
 "print status": "OK",
 */
-
-//Item represent EFI print job
-type Item struct {
-	File    string `json:"title"`
-	Printed yesNo  `json:"print status"`
-}
 
 //UnmarshalJSON  Unmarshal custom date format
 func (yn *yesNo) UnmarshalJSON(b []byte) error {

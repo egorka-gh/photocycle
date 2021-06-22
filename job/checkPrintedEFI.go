@@ -37,10 +37,16 @@ func checkPrinted(ctx context.Context, j *baseJob) error {
 	}
 
 	for _, p := range pgs {
-		itms, err := e.List(ctx, fmt.Sprintf("%s*", p.PrintgroupID))
+		mask := fmt.Sprintf("%s*", p.PrintgroupID)
+		itms, err := e.List(ctx, mask)
 		if err != nil {
 			return err
 		}
+		if j.debug {
+			j.logger.Log("debug", fmt.Sprintf("mask %s,responce %+v", mask, itms))
+			continue
+		}
+
 		m := make(map[string]bool)
 		for _, it := range itms {
 			if it.Printed {
@@ -50,13 +56,9 @@ func checkPrinted(ctx context.Context, j *baseJob) error {
 		if len(m) == p.FilesCount {
 			//all files printed
 			//mark in database
-			if j.debug {
-				j.logger.Log(fmt.Sprintf("printgroup %s, complited", p.PrintgroupID))
-			} else {
-				err = j.repo.SetPrintedEFI(ctx, p.PrintgroupID)
-				if err != nil {
-					return err
-				}
+			err = j.repo.SetPrintedEFI(ctx, p.PrintgroupID)
+			if err != nil {
+				return err
 			}
 		}
 	}

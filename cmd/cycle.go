@@ -93,7 +93,7 @@ func (p *program) Start(s service1.Service) error {
 		func() error {
 			select {
 			case <-p.interrupt:
-				return fmt.Errorf("Get interrupt signal")
+				return fmt.Errorf("get interrupt signal")
 			case <-running:
 				return nil
 			}
@@ -144,8 +144,10 @@ func initRuner() (job.Runer, photocycle.Repository, error) {
 	}
 	logger := initLoger(viper.GetString("folders.log"))
 	jobs := make([]job.Job, 0, 5)
-	jobs = append(jobs, job.FillBox())
-	if viper.GetBool("efi.active") {
+	if !viper.GetBool("fillBox.off") {
+		jobs = append(jobs, job.FillBox())
+	}
+	if !viper.GetBool("efi.off") {
 		jobs = append(jobs, job.PrintedEFI())
 	}
 	r := job.NewRuner(viper.GetInt("run.interval"), rep, logger, jobs...)
