@@ -2,6 +2,7 @@ package repo
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/egorka-gh/photocycle"
@@ -69,52 +70,46 @@ func (b *basicRepository) PackageAddWithBoxes(ctx context.Context, packages []*p
 	}
 	//insert packages
 	oSQL := "INSERT IGNORE INTO package (source, id, client_id, state, state_date, id_name, execution_date, delivery_id, delivery_name, src_state, src_state_name, mail_service, orders_num) VALUES "
-	oVals := make([]string, 0, len(packages))
+	oVals := "(?, ?, ?, 200, NOW(), ?, ?, ?, ?, ?, ?, ?, 0)"
 	oArgs := []interface{}{}
 
 	//TODO save props
 	//INSERT INTO package_prop (source, id, property, value)
 	propSQL := "INSERT IGNORE INTO package_prop (source, id, property, value) VALUES "
-	propVals := make([]string, 0, len(packages)*10)
+	propVals := "(?, ?, ?, ?)"
 	propArgs := []interface{}{}
 
 	//TODO save barcodes
 	//INSERT INTO package_barcode (source, id, barcode, bar_type, box_number) VALUES
 	barSQL := "INSERT IGNORE INTO package_barcode (source, id, barcode, bar_type, box_number) VALUES "
-	barVals := make([]string, 0, len(packages)*10)
+	barVals := "(?, ?, ?, ?, ?)"
 	barArgs := []interface{}{}
 
 	xSQL := "INSERT INTO package_box (source, package_id, box_id, box_num, barcode, price, weight, state, state_date) VALUES "
-	xVals := make([]string, 0, len(packages)*5)
+	xVals := "(?, ?, ?, ?, ?, ?, ?, ?, NOW())"
 	xArgs := []interface{}{}
 
 	pSQL := "INSERT INTO package_box_item (box_id, order_id, alias, item_from, item_to, type ,state ,state_date) VALUES "
-	pVals := make([]string, 0, len(packages)*5*3)
+	pVals := "(?, ?, ?, ?, ?, ?, ?, NOW())"
 	pArgs := []interface{}{}
 	for _, o := range packages {
 		//packages
-		oVals = append(oVals, "(?, ?, ?, 200, NOW(), ?, ?, ?, ?, ?, ?, ?, 0)")
 		//source, id, client_id, state, state_date, id_name, execution_date, delivery_id, delivery_name, src_state, src_state_name, mail_service, orders_num
 		oArgs = append(oArgs, o.Source, o.ID, o.ClientID, o.IDName, o.ExecutionDate.String(), o.DeliveryID, o.DeliveryName, o.SrcState, o.SrcStateName, o.MailService)
 		//props
 		for _, prop := range o.Properties {
-			//source, id, property, value
-			propVals = append(propVals, "(?, ?, ?, ?)")
 			propArgs = append(propArgs, prop.Source, prop.PackageID, prop.Property, prop.Value)
 		}
 		//barcodes
 		for _, bar := range o.Barcodes {
 			//(source, id, barcode, bar_type, box_number)
-			barVals = append(barVals, "(?, ?, ?, ?, ?)")
 			barArgs = append(barArgs, bar.Source, bar.PackageID, bar.Barcode, bar.BarcodeType, bar.BoxNumber)
 		}
 		//boxes
 		for _, x := range o.Boxes {
-			xVals = append(xVals, "(?, ?, ?, ?, ?, ?, ?, ?, NOW())")
 			xArgs = append(xArgs, x.Source, x.PackageID, x.ID, x.Num, x.Barcode, x.Price, x.Weight, photocycle.StateWaiteProduction)
 			//box items
 			for _, p := range x.Items {
-				pVals = append(pVals, "(?, ?, ?, ?, ?, ?, ?, NOW())")
 				pArgs = append(pArgs, p.BoxID, p.OrderID, p.Alias, p.From, p.To, p.Type, photocycle.StateWaiteProduction)
 			}
 		}
@@ -125,44 +120,31 @@ func (b *basicRepository) PackageAddWithBoxes(ctx context.Context, packages []*p
 	if err != nil {
 		return err
 	}
-	oSQL = oSQL + strings.Join(oVals, ",")
-	_, err = t.Exec(oSQL, oArgs...)
+	err = insertBatch(t, oSQL, oVals, oArgs)
 	if err != nil {
 		t.Rollback()
 		return err
 	}
 
-	if len(propVals) > 0 {
-		propSQL = propSQL + strings.Join(propVals, ",")
-		_, err = t.Exec(propSQL, propArgs...)
-		if err != nil {
-			t.Rollback()
-			return err
-		}
+	err = insertBatch(t, propSQL, propVals, propArgs)
+	if err != nil {
+		t.Rollback()
+		return err
 	}
-	if len(barVals) > 0 {
-		barSQL = barSQL + strings.Join(barVals, ",")
-		_, err = t.Exec(barSQL, barArgs...)
-		if err != nil {
-			t.Rollback()
-			return err
-		}
+	err = insertBatch(t, barSQL, barVals, barArgs)
+	if err != nil {
+		t.Rollback()
+		return err
 	}
-	if len(xVals) > 0 {
-		xSQL = xSQL + strings.Join(xVals, ",")
-		_, err = t.Exec(xSQL, xArgs...)
-		if err != nil {
-			t.Rollback()
-			return err
-		}
+	err = insertBatch(t, xSQL, xVals, xArgs)
+	if err != nil {
+		t.Rollback()
+		return err
 	}
-	if len(pVals) > 0 {
-		pSQL = pSQL + strings.Join(pVals, ",")
-		_, err = t.Exec(pSQL, pArgs...)
-		if err != nil {
-			t.Rollback()
-			return err
-		}
+	err = insertBatch(t, pSQL, pVals, pArgs)
+	if err != nil {
+		t.Rollback()
+		return err
 	}
 
 	//del from package_new
@@ -176,6 +158,51 @@ func (b *basicRepository) PackageAddWithBoxes(ctx context.Context, packages []*p
 	}
 
 	return t.Commit()
+}
+
+var maxParamsPerBatch int = 500
+
+func insertBatch(execer sqlx.Execer, insert, values string, params []interface{}) error {
+
+	if len(params) == 0 {
+		return nil
+	}
+	paramsPerInsert := strings.Count(values, "?")
+	if paramsPerInsert == 0 {
+		return fmt.Errorf("insertBatch: single insert params count is %d", paramsPerInsert)
+	}
+	if paramsPerInsert > maxParamsPerBatch {
+		return fmt.Errorf("insertBatch: single insert params count %d more then maxParamsPerBatch %d", paramsPerInsert, maxParamsPerBatch)
+	}
+	if len(params)%paramsPerInsert != 0 {
+		return fmt.Errorf("insertBatch: total params %d is not multiple of single insert params %d", len(params), paramsPerInsert)
+	}
+	inserts := len(params) / paramsPerInsert
+	batchParams := make([]interface{}, 0, maxParamsPerBatch+paramsPerInsert)
+	var sb strings.Builder
+	for i := 0; i < inserts; i++ {
+		if sb.Len() == 0 {
+			sb.WriteString(insert)
+			sb.WriteString(" ")
+		} else {
+			sb.WriteString(",")
+		}
+		sb.WriteString(values)
+		batchParams = append(batchParams, params[0:paramsPerInsert]...)
+		params = params[paramsPerInsert:]
+		if len(params) == 0 || len(batchParams) >= maxParamsPerBatch {
+			//run batch
+			var ssql = sb.String()
+			_, err := execer.Exec(ssql, batchParams...)
+			if err != nil {
+				return err
+			}
+			//reset batch
+			batchParams = batchParams[:0]
+			sb.Reset()
+		}
+	}
+	return nil
 }
 
 func (b *basicRepository) GetLastNetprintSync(ctx context.Context, source int) (int64, error) {
