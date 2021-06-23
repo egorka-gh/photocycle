@@ -129,14 +129,26 @@ func fillBoxes(ctx context.Context, j *baseJob) error {
 				group.Boxes = append(group.Boxes, bg)
 			}
 		}
-		filled = append(filled, group)
+		//save here to give some gap between api calls
+		//persist && del
+		err = j.repo.PackageAddWithBoxes(ctx, []*photocycle.Package{group})
+		if err != nil {
+			j.logger.Log("error", fmt.Sprintf("source %d; group %d; repository.PackageAddWithBoxes error: %s", g.Source, g.ID, err.Error()))
+		} else {
+			filled = append(filled, group)
+		}
+		//filled = append(filled, group)
 	}
-	//persist && del processed
-	err = j.repo.PackageAddWithBoxes(ctx, filled)
-	if err != nil {
-		err = fmt.Errorf("repository.PackageAddWithBoxes error: %s", err.Error())
-	} else {
-		j.logger.Log("result", fmt.Sprintf("Groups found %d, added %d", len(grps), len(filled)))
-	}
-	return err
+	j.logger.Log("result", fmt.Sprintf("Groups found %d, added %d", len(grps), len(filled)))
+	/*
+			//persist && del processed
+			err = j.repo.PackageAddWithBoxes(ctx, filled)
+			if err != nil {
+				err = fmt.Errorf("repository.PackageAddWithBoxes error: %s", err.Error())
+			} else {
+				j.logger.Log("result", fmt.Sprintf("Groups found %d, added %d", len(grps), len(filled)))
+			}
+		return err
+	*/
+	return nil
 }
