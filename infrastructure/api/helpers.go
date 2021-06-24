@@ -42,10 +42,12 @@ func newRequest(ctx context.Context, method string, endpoint *url.URL, data url.
 	return req, nil
 }
 
+type transportError error
+
 func do(httpClient *http.Client, req *http.Request, value, errorvalue interface{}) (*http.Response, error) {
 	resp, err := httpClient.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, transportError(err)
 	}
 	defer resp.Body.Close()
 	var raw bytes.Buffer

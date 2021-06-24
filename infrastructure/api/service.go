@@ -12,4 +12,5 @@ type FFService interface {
 	//common FF api
 	GetBoxes(ctx context.Context, groupID int) (*GroupBoxes, error)
 	GetGroup(ctx context.Context, groupID int) (map[string]interface{}, error)
+	Active() bool
 }

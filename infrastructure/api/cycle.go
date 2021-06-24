@@ -16,6 +16,9 @@ type Client struct {
 	AppKey    string
 
 	httpClient *http.Client
+	calls      int
+	callsLimit int
+	broken     bool
 }
 
 //NewClient creates Service backed by an HTTP server living at the remote instance
@@ -28,6 +31,8 @@ func NewClient(httpClient *http.Client, baseURL, appKey string) (FFService, erro
 		BaseURL:    u,
 		AppKey:     appKey,
 		httpClient: httpClient,
+		//TODO hardcoded
+		callsLimit: 200,
 	}, nil
 }
 
@@ -131,69 +136,31 @@ func (c *Client) newRequest(ctx context.Context, method, path string, data url.V
 		return nil, err
 	}
 
-	/*
-		if data == nil {
-			data = url.Values{}
-		}
-		if data.Get("appkey") == "" {
-			data.Set("appkey", c.AppKey)
-		}
-		var reader io.Reader
-		if method == "POST" {
-			reader = strings.NewReader(data.Encode())
-		} else {
-			//api bug with reserved char :
-			q := data.Encode()
-			q = strings.Replace(q, "%3A", ":", -1)
-			q = strings.Replace(q, "%5B", "[", -1)
-			q = strings.Replace(q, "%5D", "]", -1)
-			u.RawQuery = q //data.Encode()
-		}
-		//fmt.Println(data.Encode())
-		req, err := http.NewRequestWithContext(ctx, method, u.String(), reader)
-		if err != nil {
-			return nil, err
-		}
-
-		if method == "POST" {
-			req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-		}
-		req.Header.Set("Accept", "application/json")
-	*/
 	if c.UserAgent != "" {
 		req.Header.Set("User-Agent", c.UserAgent)
 	}
 	return req, nil
 }
 
-func (c *Client) do(req *http.Request, v interface{}) (*http.Response, error) {
-	//TODO refactor with helper
+//Active - not broken & not over calls limit
+func (c *Client) Active() bool {
+	return !c.broken && (c.callsLimit <= 0 || c.calls < c.callsLimit)
+}
 
+func (c *Client) do(req *http.Request, v interface{}) (*http.Response, error) {
+	if !c.Active() {
+		return nil, errors.New("client is not active")
+	}
+	c.calls++
 	ae := apiError{}
 	resp, err := do(c.httpClient, req, v, &ae)
+	if _, ok := err.(transportError); ok {
+		c.broken = true
+	}
+	if resp != nil && resp.StatusCode >= 500 {
+		c.broken = true
+	}
 
-	/*
-		resp, err := c.httpClient.Do(req)
-		if err != nil {
-			return nil, err
-		}
-		defer resp.Body.Close()
-		var raw bytes.Buffer
-		tee := io.TeeReader(resp.Body, &raw)
-		err = json.NewDecoder(tee).Decode(v)
-		if err != nil {
-			errStr := raw.String()
-			err = fmt.Errorf("%s; Response: %s", err.Error(), errStr)
-
-			raw.Reset()
-			raw.WriteString(errStr)
-			ae := apiError{}
-			if e := json.NewDecoder(&raw).Decode(&ae); e == nil && (ae.Code != 0 || ae.Error != "") {
-				//intrenal api error
-				err = fmt.Errorf("Error: %s; Code: %d; Exception: %s", ae.Error, ae.Code, ae.Exception)
-			}
-		}
-	*/
 	if ae.Code != 0 || ae.Error != "" {
 		//intrenal api error
 		err = fmt.Errorf("%s; Code: %d; Exception: %s", ae.Error, ae.Code, ae.Exception)

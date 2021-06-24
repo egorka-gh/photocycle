@@ -61,6 +61,9 @@ func fillBoxes(ctx context.Context, j *baseJob) error {
 		if !ok {
 			return fmt.Errorf("source %d not found", g.Source)
 		}
+		if !cl.Active() {
+			continue
+		}
 		var gbs *api.GroupBoxes
 		if hasBox[g.Source] {
 			//load boxes from site
