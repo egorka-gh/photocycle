@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"testing"
@@ -13,7 +14,7 @@ func TestGroupBoxes(t *testing.T) {
 		t.Errorf("Error create client %q", err.Error())
 		return
 	}
-	b, err := client.GetBoxes(nil, 45848)
+	b, err := client.GetBoxes(context.TODO(), 45848)
 	if err != nil {
 		t.Errorf("Error %q", err.Error())
 		return
@@ -25,7 +26,7 @@ func TestGroupBoxes(t *testing.T) {
 		t.Errorf("Error create client %q", err.Error())
 		return
 	}
-	_, err = client.GetBoxes(nil, 43314)
+	_, err = client.GetBoxes(context.TODO(), 43314)
 	if err == nil {
 		t.Error("Expect error (wrong url) but got nil")
 		return
@@ -37,7 +38,7 @@ func TestGroupBoxes(t *testing.T) {
 		t.Errorf("Error create client %q", err.Error())
 		return
 	}
-	_, err = client.GetBoxes(nil, 43314)
+	_, err = client.GetBoxes(context.TODO(), 43314)
 	if err == nil {
 		t.Error("Expect error (wrong url) but got nil")
 		return
@@ -49,7 +50,7 @@ func TestGroupBoxes(t *testing.T) {
 		t.Errorf("Error create client %q", err.Error())
 		return
 	}
-	_, err = client.GetBoxes(nil, 43314)
+	_, err = client.GetBoxes(context.TODO(), 43314)
 	if err == nil {
 		t.Error("Expect error (wrong app key) but got nil")
 		return
@@ -61,7 +62,7 @@ func TestGroupBoxes(t *testing.T) {
 		t.Errorf("Error create client %q", err.Error())
 		return
 	}
-	_, err = client.GetBoxes(nil, -11111)
+	_, err = client.GetBoxes(context.TODO(), -11111)
 	if err == nil {
 		t.Error("Expect error (wrong group id) but got nil")
 		return
@@ -76,7 +77,7 @@ func TestGroup(t *testing.T) {
 		t.Errorf("Error create client %q", err.Error())
 		return
 	}
-	b, err := client.GetGroup(nil, 349141)
+	b, err := client.GetGroup(context.TODO(), 349141)
 	if err != nil {
 		t.Errorf("Error %q", err.Error())
 		return
@@ -88,7 +89,7 @@ func TestGroup(t *testing.T) {
 		t.Errorf("Error create client %q", err.Error())
 		return
 	}
-	_, err = client.GetGroup(nil, 349141)
+	_, err = client.GetGroup(context.TODO(), 349141)
 	if err == nil {
 		t.Error("Expect error (wrong url) but got nil")
 		return
@@ -101,7 +102,7 @@ func TestGroup(t *testing.T) {
 		t.Errorf("Error create client %q", err.Error())
 		return
 	}
-	_, err = client.GetGroup(nil, -349141)
+	_, err = client.GetGroup(context.TODO(), -349141)
 	if err == nil {
 		t.Error("Expect error (wrong group id) but got nil")
 		return

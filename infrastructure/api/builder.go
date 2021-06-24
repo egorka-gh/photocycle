@@ -15,11 +15,11 @@ import (
 func CreateBuilder(rep photocycle.Repository) (*Builder, error) {
 	fm, err := rep.GetJSONMaps(context.Background())
 	if err != nil {
-		return nil, fmt.Errorf("Error get JSONMaps from repository %q", err.Error())
+		return nil, fmt.Errorf("error get JSONMaps from repository %q", err.Error())
 	}
 	dm, err := rep.GetDeliveryMaps(context.Background())
 	if err != nil {
-		return nil, fmt.Errorf("Error get GetDeliveryMaps from repository %q", err.Error())
+		return nil, fmt.Errorf("error get GetDeliveryMaps from repository %q", err.Error())
 	}
 	b := &Builder{
 		jmap:            fm,
@@ -40,7 +40,7 @@ func (b *Builder) BuildPackage(source int, raw map[string]interface{}) (*photocy
 	res := &photocycle.Package{}
 	fields, ok := b.jmap[5]
 	if !ok {
-		return res, errors.New("Buider init error, has no fields for family 5")
+		return res, errors.New("buider init error, has no fields for family 5")
 	}
 	//create & fill json vs object fields
 	jm := make(map[string]interface{})
@@ -71,7 +71,7 @@ func (b *Builder) BuildPackage(source int, raw map[string]interface{}) (*photocy
 	//build prorerties
 	fields, ok = b.jmap[6]
 	if !ok {
-		return res, errors.New("Buider init error, has no fields for family 6")
+		return res, errors.New("buider init error, has no fields for family 6")
 	}
 	props := make([]photocycle.PackageProperty, 0, len(fields))
 	for _, f := range fields {

@@ -23,7 +23,7 @@ func TestBuildPackage(t *testing.T) {
 		t.Errorf("Error create client %q", err.Error())
 		return
 	}
-	g, err := client.GetGroup(nil, 45848)
+	g, err := client.GetGroup(context.TODO(), 45848)
 	if err != nil {
 		t.Errorf("Error get group  %q", err.Error())
 		return
