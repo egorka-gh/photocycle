@@ -76,7 +76,7 @@ func fillBoxes(ctx context.Context, j *baseJob) error {
 				}
 				//increment err counter and skip
 				g.Attempt++
-				if g.Attempt < 3 {
+				if g.Attempt < 4 {
 					//maybe it's not ready
 					//try next time
 					j.repo.NewPackageUpdate(ctx, g)
