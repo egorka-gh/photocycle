@@ -49,9 +49,10 @@ func checkPrinted(ctx context.Context, j *baseJob) error {
 
 		m := make(map[string]bool)
 		for _, it := range itms {
-			if it.Printed {
-				m[it.File] = true
-			}
+			m[it.File] = true
+			// if it.Printed {
+			// 	m[it.File] = true
+			// }
 		}
 		if len(m) == p.FilesCount {
 			//all files printed

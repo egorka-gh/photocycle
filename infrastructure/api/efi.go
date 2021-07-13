@@ -122,6 +122,7 @@ func (e *EFI) List(ctx context.Context, title string) ([]Item, error) {
 	u := e.baseURL.ResolveReference(&url.URL{Path: "jobs/"})
 	data := url.Values{}
 	data.Set("title", title)
+	data.Set("print status", "OK")
 	req, err := newRequest(ctx, "GET", u, data, false)
 	if err != nil {
 		return nil, err
@@ -169,6 +170,7 @@ type yesNo bool
 
 //UnmarshalJSON  Unmarshal custom date format
 func (yn *yesNo) UnmarshalJSON(b []byte) error {
+	//TODO not work, so unused
 	//unmarshal to string??
 	y := yesNo(string(b) == "OK")
 	yn = &y
